@@ -57,6 +57,9 @@ const Index = () => {
           <AppointmentsKanban
             appointments={crmData.appointments.map(apt => ({
               id: apt.id.toString(),
+              clientId: apt.cliente_id || '',
+              professionalId: apt.profissional_id.toString(),
+              serviceId: apt.servico_id.toString(),
               client: {
                 name: apt.cliente_nome,
                 phone: apt.cliente_telefone,
@@ -71,7 +74,9 @@ const Index = () => {
               date: apt.data_agendamento,
               time: apt.hora_agendamento,
               status: apt.status as any,
-              value: apt.valor || 0
+              value: apt.valor || 0,
+              createdAt: apt.created_at,
+              updatedAt: apt.updated_at || apt.created_at
             }))}
             onStatusChange={handleStatusChange}
             onWhatsAppClick={handleWhatsAppClick}
@@ -113,17 +118,16 @@ const Index = () => {
             professionals={crmData.professionals.map(prof => ({
               id: prof.id.toString(),
               name: prof.nome,
-              specialty: prof.especialidade,
-              photoUrl: prof.photo_url,
               email: prof.email,
               phone: prof.telefone,
               specialties: prof.especialidades || [],
-              workHours: {
+              workingHours: {
                 start: prof.horario_inicio || '08:00',
                 end: prof.horario_fim || '18:00'
               },
-              workDays: prof.dias_trabalho || [1, 2, 3, 4, 5],
-              active: prof.ativo !== false
+              workingDays: prof.dias_trabalho || [1, 2, 3, 4, 5],
+              isActive: prof.ativo !== false,
+              avatar: prof.photo_url
             }))}
             onUpdateProfessionals={() => crmData.refetch()}
           />
