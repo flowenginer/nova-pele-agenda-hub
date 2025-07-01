@@ -13,6 +13,51 @@ export const useSupabaseCRM = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  // Função para sincronizar clientes dos agendamentos
+  const syncClientsFromAppointments = async (appointmentsData: DatabaseAppointment[]) => {
+    try {
+      const clientsToCreate = [];
+      
+      for (const appointment of appointmentsData) {
+        if (appointment.cliente_nome && appointment.cliente_telefone) {
+          // Verificar se cliente já existe
+          const existingClient = await supabase
+            .from('clientes')
+            .select('id')
+            .eq('telefone', appointment.cliente_telefone)
+            .maybeSingle();
+
+          if (!existingClient.data) {
+            // Cliente não existe, adicionar à lista para criar
+            clientsToCreate.push({
+              nome: appointment.cliente_nome,
+              telefone: appointment.cliente_telefone,
+              whatsapp: appointment.cliente_telefone,
+              email: appointment.email || null,
+              status: 'cliente'
+            });
+          }
+        }
+      }
+
+      // Criar clientes em lote se houver algum
+      if (clientsToCreate.length > 0) {
+        const { data: newClients, error } = await supabase
+          .from('clientes')
+          .insert(clientsToCreate)
+          .select();
+
+        if (error) {
+          console.error('Erro ao sincronizar clientes:', error);
+        } else {
+          console.log(`${newClients?.length || 0} novos clientes sincronizados dos agendamentos`);
+        }
+      }
+    } catch (error) {
+      console.error('Erro na sincronização de clientes:', error);
+    }
+  };
+
   // Fetch all data
   const fetchAllData = async () => {
     try {
@@ -54,12 +99,27 @@ export const useSupabaseCRM = () => {
       if (appointmentsError) throw appointmentsError;
       setAppointments((appointmentsData || []) as DatabaseAppointment[]);
 
+      // Sincronizar clientes dos agendamentos
+      if (appointmentsData && appointmentsData.length > 0) {
+        await syncClientsFromAppointments(appointmentsData);
+        
+        // Recarregar clientes após sincronização
+        const { data: updatedClientsData } = await supabase
+          .from('clientes')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (updatedClientsData) {
+          setClients(updatedClientsData as DatabaseClient[]);
+        }
+      }
+
       // Fetch system settings
       const { data: settingsData, error: settingsError } = await supabase
         .from('configuracoes_sistema')
         .select('*')
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (settingsError && settingsError.code !== 'PGRST116') throw settingsError;
       setSettings(settingsData as SystemSettings || null);
@@ -148,6 +208,26 @@ export const useSupabaseCRM = () => {
       if (error) throw error;
 
       setAppointments(prev => [data as DatabaseAppointment, ...prev]);
+      
+      // Sincronizar cliente automaticamente se não existir
+      if (appointmentData.cliente_nome && appointmentData.cliente_telefone) {
+        const existingClient = await supabase
+          .from('clientes')
+          .select('id')
+          .eq('telefone', appointmentData.cliente_telefone)
+          .maybeSingle();
+
+        if (!existingClient.data) {
+          await addClient({
+            nome: appointmentData.cliente_nome,
+            telefone: appointmentData.cliente_telefone,
+            whatsapp: appointmentData.cliente_telefone,
+            email: appointmentData.email || null,
+            status: 'cliente'
+          });
+        }
+      }
+
       toast({
         title: "Agendamento criado",
         description: "Agendamento foi criado com sucesso.",

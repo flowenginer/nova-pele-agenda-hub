@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Appointment } from '../types/crm';
 import { Calendar, User, Clock, Phone } from 'lucide-react';
 
@@ -42,7 +43,7 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 h-full">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-nova-pink-600 to-nova-purple-600 bg-clip-text text-transparent">
@@ -52,84 +53,86 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
         {statusColumns.map(column => {
           const columnAppointments = getAppointmentsByStatus(column.id);
           return (
-            <div key={column.id} className={`rounded-lg border-2 ${column.color} p-4`}>
-              <div className="flex items-center justify-between mb-4">
+            <div key={column.id} className={`rounded-lg border-2 ${column.color} p-4 flex flex-col h-full`}>
+              <div className="flex items-center justify-between mb-4 flex-shrink-0">
                 <h3 className="font-semibold text-gray-800">{column.title}</h3>
                 <Badge variant="secondary" className="text-xs">
                   {columnAppointments.length}
                 </Badge>
               </div>
               
-              <div className="space-y-3">
-                {columnAppointments.map(appointment => (
-                  <Card key={appointment.id} className="bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                    <CardContent className="p-4">
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-gray-800 truncate">
-                            {appointment.client?.name || 'Cliente não encontrado'}
-                          </h4>
-                          <Badge 
-                            className={`text-xs cursor-pointer transition-colors ${statusColors[appointment.status]}`}
-                            onClick={() => {
-                              const nextStatus = getNextStatus(appointment.status);
-                              if (nextStatus) onStatusChange(appointment.id, nextStatus);
-                            }}
-                          >
-                            {column.title}
-                          </Badge>
-                        </div>
-                        
-                        <div className="space-y-2 text-sm text-gray-600">
-                          <div className="flex items-center space-x-2">
-                            <User className="w-4 h-4" />
-                            <span className="truncate">{appointment.professional?.name}</span>
+              <ScrollArea className="flex-1 pr-4">
+                <div className="space-y-3">
+                  {columnAppointments.map(appointment => (
+                    <Card key={appointment.id} className="bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                      <CardContent className="p-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium text-gray-800 truncate">
+                              {appointment.client?.name || 'Cliente não encontrado'}
+                            </h4>
+                            <Badge 
+                              className={`text-xs cursor-pointer transition-colors ${statusColors[appointment.status]}`}
+                              onClick={() => {
+                                const nextStatus = getNextStatus(appointment.status);
+                                if (nextStatus) onStatusChange(appointment.id, nextStatus);
+                              }}
+                            >
+                              {column.title}
+                            </Badge>
                           </div>
                           
-                          <div className="flex items-center space-x-2">
-                            <Calendar className="w-4 h-4" />
-                            <span>{new Date(appointment.date).toLocaleDateString('pt-BR')}</span>
+                          <div className="space-y-2 text-sm text-gray-600">
+                            <div className="flex items-center space-x-2">
+                              <User className="w-4 h-4" />
+                              <span className="truncate">{appointment.professional?.name}</span>
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                              <Calendar className="w-4 h-4" />
+                              <span>{new Date(appointment.date).toLocaleDateString('pt-BR')}</span>
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                              <Clock className="w-4 h-4" />
+                              <span>{appointment.time} - {appointment.service?.name}</span>
+                            </div>
                           </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            <Clock className="w-4 h-4" />
-                            <span>{appointment.time} - {appointment.service?.name}</span>
-                          </div>
+
+                          {appointment.value && (
+                            <div className="text-sm font-semibold text-nova-pink-600">
+                              R$ {appointment.value.toLocaleString('pt-BR')}
+                            </div>
+                          )}
+
+                          {appointment.client?.whatsapp && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full text-green-600 border-green-200 hover:bg-green-50"
+                              onClick={() => handleWhatsAppClick(appointment)}
+                            >
+                              <Phone className="w-4 h-4 mr-2" />
+                              WhatsApp
+                            </Button>
+                          )}
                         </div>
-
-                        {appointment.value && (
-                          <div className="text-sm font-semibold text-nova-pink-600">
-                            R$ {appointment.value.toLocaleString('pt-BR')}
-                          </div>
-                        )}
-
-                        {appointment.client?.whatsapp && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="w-full text-green-600 border-green-200 hover:bg-green-50"
-                            onClick={() => handleWhatsAppClick(appointment)}
-                          >
-                            <Phone className="w-4 h-4 mr-2" />
-                            WhatsApp
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                
-                {columnAppointments.length === 0 && (
-                  <div className="text-center py-8 text-gray-400">
-                    <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Nenhum agendamento</p>
-                  </div>
-                )}
-              </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  
+                  {columnAppointments.length === 0 && (
+                    <div className="text-center py-8 text-gray-400">
+                      <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">Nenhum agendamento</p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
             </div>
           );
         })}
