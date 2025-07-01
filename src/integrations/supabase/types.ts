@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       agendamentos: {
         Row: {
+          cliente_id: string | null
           cliente_nome: string
           cliente_telefone: string
           created_at: string
@@ -18,12 +19,17 @@ export type Database = {
           email: string | null
           hora_agendamento: string
           id: number
+          id_uuid: string | null
+          observacoes: string | null
           profissional_id: number
           servico_id: number
           status: string
+          updated_at: string | null
           user_id: number | null
+          valor: number | null
         }
         Insert: {
+          cliente_id?: string | null
           cliente_nome: string
           cliente_telefone: string
           created_at?: string
@@ -31,12 +37,17 @@ export type Database = {
           email?: string | null
           hora_agendamento: string
           id?: number
+          id_uuid?: string | null
+          observacoes?: string | null
           profissional_id: number
           servico_id: number
           status?: string
+          updated_at?: string | null
           user_id?: number | null
+          valor?: number | null
         }
         Update: {
+          cliente_id?: string | null
           cliente_nome?: string
           cliente_telefone?: string
           created_at?: string
@@ -44,10 +55,14 @@ export type Database = {
           email?: string | null
           hora_agendamento?: string
           id?: number
+          id_uuid?: string | null
+          observacoes?: string | null
           profissional_id?: number
           servico_id?: number
           status?: string
+          updated_at?: string | null
           user_id?: number | null
+          valor?: number | null
         }
         Relationships: [
           {
@@ -64,47 +79,225 @@ export type Database = {
             referencedRelation: "servicos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_agendamentos_cliente"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      clientes: {
+        Row: {
+          created_at: string | null
+          data_nascimento: string | null
+          email: string | null
+          endereco: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          status: string | null
+          telefone: string
+          updated_at: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_nascimento?: string | null
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          status?: string | null
+          telefone: string
+          updated_at?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_nascimento?: string | null
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          status?: string | null
+          telefone?: string
+          updated_at?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      configuracoes_sistema: {
+        Row: {
+          cor_primaria: string | null
+          created_at: string | null
+          dias_funcionamento: number[] | null
+          duracao_padrao_agendamento: number | null
+          horario_fim: string | null
+          horario_inicio: string | null
+          id: string
+          integracao_whatsapp: boolean | null
+          logo_url: string | null
+          mensagem_boas_vindas: string | null
+          mensagem_confirmacao: string | null
+          nome_clinica: string | null
+          notificacoes_ativadas: boolean | null
+          subtitulo_pagina: string | null
+          titulo_pagina: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cor_primaria?: string | null
+          created_at?: string | null
+          dias_funcionamento?: number[] | null
+          duracao_padrao_agendamento?: number | null
+          horario_fim?: string | null
+          horario_inicio?: string | null
+          id?: string
+          integracao_whatsapp?: boolean | null
+          logo_url?: string | null
+          mensagem_boas_vindas?: string | null
+          mensagem_confirmacao?: string | null
+          nome_clinica?: string | null
+          notificacoes_ativadas?: boolean | null
+          subtitulo_pagina?: string | null
+          titulo_pagina?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cor_primaria?: string | null
+          created_at?: string | null
+          dias_funcionamento?: number[] | null
+          duracao_padrao_agendamento?: number | null
+          horario_fim?: string | null
+          horario_inicio?: string | null
+          id?: string
+          integracao_whatsapp?: boolean | null
+          logo_url?: string | null
+          mensagem_boas_vindas?: string | null
+          mensagem_confirmacao?: string | null
+          nome_clinica?: string | null
+          notificacoes_ativadas?: boolean | null
+          subtitulo_pagina?: string | null
+          titulo_pagina?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       profissionais: {
         Row: {
+          ativo: boolean | null
+          created_at: string | null
+          dias_trabalho: number[] | null
+          email: string | null
           especialidade: string | null
+          especialidades: string[] | null
+          horario_fim: string | null
+          horario_inicio: string | null
           id: number
           nome: string
           photo_url: string | null
+          telefone: string | null
+          updated_at: string | null
         }
         Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          dias_trabalho?: number[] | null
+          email?: string | null
           especialidade?: string | null
+          especialidades?: string[] | null
+          horario_fim?: string | null
+          horario_inicio?: string | null
           id?: number
           nome: string
           photo_url?: string | null
+          telefone?: string | null
+          updated_at?: string | null
         }
         Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          dias_trabalho?: number[] | null
+          email?: string | null
           especialidade?: string | null
+          especialidades?: string[] | null
+          horario_fim?: string | null
+          horario_inicio?: string | null
           id?: number
           nome?: string
           photo_url?: string | null
+          telefone?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
       servicos: {
         Row: {
+          ativo: boolean | null
+          categoria: string | null
+          created_at: string | null
+          descricao: string | null
           duracao_minutos: number | null
           id: number
           nome: string
           preco: number | null
+          profissionais_ids: string[] | null
+          updated_at: string | null
         }
         Insert: {
+          ativo?: boolean | null
+          categoria?: string | null
+          created_at?: string | null
+          descricao?: string | null
           duracao_minutos?: number | null
           id?: number
           nome: string
           preco?: number | null
+          profissionais_ids?: string[] | null
+          updated_at?: string | null
         }
         Update: {
+          ativo?: boolean | null
+          categoria?: string | null
+          created_at?: string | null
+          descricao?: string | null
           duracao_minutos?: number | null
           id?: number
           nome?: string
           preco?: number | null
+          profissionais_ids?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      templates_comunicacao: {
+        Row: {
+          created_at: string | null
+          id: string
+          mensagem: string
+          nome: string
+          tipo: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          mensagem: string
+          nome: string
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          mensagem?: string
+          nome?: string
+          tipo?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }

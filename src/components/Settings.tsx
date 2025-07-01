@@ -1,36 +1,64 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { SystemSettings } from '../types/crm';
 import { Settings as SettingsIcon, Upload, Save } from 'lucide-react';
+import type { SystemSettings } from '../types/supabase';
 
-export const Settings = () => {
-  const [settings, setSettings] = useState<SystemSettings>({
-    clinicName: 'Nova Pele Estética',
-    primaryColor: '#ec4899',
-    workingHours: { start: '08:00', end: '18:00' },
-    workingDays: [1, 2, 3, 4, 5],
-    appointmentDuration: 60,
-    notificationsEnabled: true,
-    whatsappIntegration: true
+interface SettingsProps {
+  settings: SystemSettings | null;
+  updateSettings: (updates: Partial<SystemSettings>) => Promise<any>;
+}
+
+export const Settings = ({ settings, updateSettings }: SettingsProps) => {
+  const [formData, setFormData] = useState({
+    nome_clinica: '',
+    titulo_pagina: '',
+    subtitulo_pagina: '',
+    mensagem_boas_vindas: '',
+    mensagem_confirmacao: '',
+    horario_inicio: '08:00',
+    horario_fim: '18:00',
+    duracao_padrao_agendamento: 60,
+    notificacoes_ativadas: true,
+    integracao_whatsapp: true,
+    dias_funcionamento: [1, 2, 3, 4, 5],
+    logo_url: ''
   });
 
-  const [pageSettings, setPageSettings] = useState({
-    title: 'Nova Pele Estética',
-    subtitle: 'Cuidando melhor de você',
-    welcomeMessage: 'Bem-vinda à Nova Pele Estética! Agende seu horário online e transforme sua beleza com nossos tratamentos especializados.',
-    confirmationMessage: 'Agendamento realizado com sucesso! Entraremos em contato para confirmar.',
-    logo: ''
-  });
+  const [loading, setLoading] = useState(false);
 
-  const handleSaveSettings = () => {
-    console.log('Configurações salvas:', settings, pageSettings);
-    // Aqui seria integrado com Supabase para salvar as configurações
-    alert('Configurações salvas com sucesso!');
+  useEffect(() => {
+    if (settings) {
+      setFormData({
+        nome_clinica: settings.nome_clinica || '',
+        titulo_pagina: settings.titulo_pagina || '',
+        subtitulo_pagina: settings.subtitulo_pagina || '',
+        mensagem_boas_vindas: settings.mensagem_boas_vindas || '',
+        mensagem_confirmacao: settings.mensagem_confirmacao || '',
+        horario_inicio: settings.horario_inicio || '08:00',
+        horario_fim: settings.horario_fim || '18:00',
+        duracao_padrao_agendamento: settings.duracao_padrao_agendamento || 60,
+        notificacoes_ativadas: settings.notificacoes_ativadas ?? true,
+        integracao_whatsapp: settings.integracao_whatsapp ?? true,
+        dias_funcionamento: settings.dias_funcionamento || [1, 2, 3, 4, 5],
+        logo_url: settings.logo_url || ''
+      });
+    }
+  }, [settings]);
+
+  const handleSaveSettings = async () => {
+    setLoading(true);
+    try {
+      await updateSettings(formData);
+    } catch (error) {
+      console.error('Error saving settings:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,9 +66,9 @@ export const Settings = () => {
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setPageSettings(prev => ({ 
+        setFormData(prev => ({ 
           ...prev, 
-          logo: e.target?.result as string 
+          logo_url: e.target?.result as string 
         }));
       };
       reader.readAsDataURL(file);
@@ -58,11 +86,11 @@ export const Settings = () => {
   ];
 
   const toggleWorkingDay = (dayId: number) => {
-    setSettings(prev => ({
+    setFormData(prev => ({
       ...prev,
-      workingDays: prev.workingDays.includes(dayId)
-        ? prev.workingDays.filter(d => d !== dayId)
-        : [...prev.workingDays, dayId]
+      dias_funcionamento: prev.dias_funcionamento.includes(dayId)
+        ? prev.dias_funcionamento.filter(d => d !== dayId)
+        : [...prev.dias_funcionamento, dayId]
     }));
   };
 
@@ -75,9 +103,13 @@ export const Settings = () => {
           </h2>
           <p className="text-gray-600 mt-1">Personalize o sistema e a página de agendamento</p>
         </div>
-        <Button className="nova-button" onClick={handleSaveSettings}>
+        <Button 
+          className="nova-button" 
+          onClick={handleSaveSettings}
+          disabled={loading}
+        >
           <Save className="w-4 h-4 mr-2" />
-          Salvar Tudo
+          {loading ? 'Salvando...' : 'Salvar Tudo'}
         </Button>
       </div>
 
@@ -94,9 +126,9 @@ export const Settings = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Logo da Clínica</label>
               <div className="flex items-center space-x-4">
-                {pageSettings.logo && (
+                {formData.logo_url && (
                   <img 
-                    src={pageSettings.logo} 
+                    src={formData.logo_url} 
                     alt="Logo" 
                     className="w-16 h-16 object-contain rounded-lg border"
                   />
@@ -116,7 +148,7 @@ export const Settings = () => {
                   >
                     <label htmlFor="logo-upload">
                       <Upload className="w-4 h-4 mr-2" />
-                      {pageSettings.logo ? 'Trocar Logo' : 'Upload Logo'}
+                      {formData.logo_url ? 'Trocar Logo' : 'Upload Logo'}
                     </label>
                   </Button>
                 </div>
@@ -126,8 +158,8 @@ export const Settings = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Título da Página</label>
               <Input
-                value={pageSettings.title}
-                onChange={(e) => setPageSettings(prev => ({ ...prev, title: e.target.value }))}
+                value={formData.titulo_pagina}
+                onChange={(e) => setFormData(prev => ({ ...prev, titulo_pagina: e.target.value }))}
                 placeholder="Nova Pele Estética"
               />
             </div>
@@ -135,8 +167,8 @@ export const Settings = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Subtítulo</label>
               <Input
-                value={pageSettings.subtitle}
-                onChange={(e) => setPageSettings(prev => ({ ...prev, subtitle: e.target.value }))}
+                value={formData.subtitulo_pagina}
+                onChange={(e) => setFormData(prev => ({ ...prev, subtitulo_pagina: e.target.value }))}
                 placeholder="Cuidando melhor de você"
               />
             </div>
@@ -144,8 +176,8 @@ export const Settings = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Mensagem de Boas-vindas</label>
               <Textarea
-                value={pageSettings.welcomeMessage}
-                onChange={(e) => setPageSettings(prev => ({ ...prev, welcomeMessage: e.target.value }))}
+                value={formData.mensagem_boas_vindas}
+                onChange={(e) => setFormData(prev => ({ ...prev, mensagem_boas_vindas: e.target.value }))}
                 rows={3}
               />
             </div>
@@ -153,8 +185,8 @@ export const Settings = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Mensagem de Confirmação</label>
               <Textarea
-                value={pageSettings.confirmationMessage}
-                onChange={(e) => setPageSettings(prev => ({ ...prev, confirmationMessage: e.target.value }))}
+                value={formData.mensagem_confirmacao}
+                onChange={(e) => setFormData(prev => ({ ...prev, mensagem_confirmacao: e.target.value }))}
                 rows={2}
               />
             </div>
@@ -172,8 +204,8 @@ export const Settings = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Nome da Clínica</label>
               <Input
-                value={settings.clinicName}
-                onChange={(e) => setSettings(prev => ({ ...prev, clinicName: e.target.value }))}
+                value={formData.nome_clinica}
+                onChange={(e) => setFormData(prev => ({ ...prev, nome_clinica: e.target.value }))}
               />
             </div>
             
@@ -182,11 +214,8 @@ export const Settings = () => {
                 <label className="text-sm font-medium text-gray-700">Horário de Abertura</label>
                 <Input
                   type="time"
-                  value={settings.workingHours.start}
-                  onChange={(e) => setSettings(prev => ({
-                    ...prev,
-                    workingHours: { ...prev.workingHours, start: e.target.value }
-                  }))}
+                  value={formData.horario_inicio}
+                  onChange={(e) => setFormData(prev => ({ ...prev, horario_inicio: e.target.value }))}
                 />
               </div>
               
@@ -194,11 +223,8 @@ export const Settings = () => {
                 <label className="text-sm font-medium text-gray-700">Horário de Fechamento</label>
                 <Input
                   type="time"
-                  value={settings.workingHours.end}
-                  onChange={(e) => setSettings(prev => ({
-                    ...prev,
-                    workingHours: { ...prev.workingHours, end: e.target.value }
-                  }))}
+                  value={formData.horario_fim}
+                  onChange={(e) => setFormData(prev => ({ ...prev, horario_fim: e.target.value }))}
                 />
               </div>
             </div>
@@ -207,10 +233,10 @@ export const Settings = () => {
               <label className="text-sm font-medium text-gray-700">Duração Padrão (minutos)</label>
               <Input
                 type="number"
-                value={settings.appointmentDuration}
-                onChange={(e) => setSettings(prev => ({ 
+                value={formData.duracao_padrao_agendamento}
+                onChange={(e) => setFormData(prev => ({ 
                   ...prev, 
-                  appointmentDuration: parseInt(e.target.value) 
+                  duracao_padrao_agendamento: parseInt(e.target.value) 
                 }))}
                 min="15"
                 max="240"
@@ -225,7 +251,7 @@ export const Settings = () => {
                   <div key={day.id} className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">{day.name}</span>
                     <Switch
-                      checked={settings.workingDays.includes(day.id)}
+                      checked={formData.dias_funcionamento.includes(day.id)}
                       onCheckedChange={() => toggleWorkingDay(day.id)}
                     />
                   </div>
@@ -240,10 +266,10 @@ export const Settings = () => {
                   <p className="text-xs text-gray-500">Enviar lembretes e confirmações</p>
                 </div>
                 <Switch
-                  checked={settings.notificationsEnabled}
-                  onCheckedChange={(checked) => setSettings(prev => ({ 
+                  checked={formData.notificacoes_ativadas}
+                  onCheckedChange={(checked) => setFormData(prev => ({ 
                     ...prev, 
-                    notificationsEnabled: checked 
+                    notificacoes_ativadas: checked 
                   }))}
                 />
               </div>
@@ -254,10 +280,10 @@ export const Settings = () => {
                   <p className="text-xs text-gray-500">Habilitar envio via WhatsApp</p>
                 </div>
                 <Switch
-                  checked={settings.whatsappIntegration}
-                  onCheckedChange={(checked) => setSettings(prev => ({ 
+                  checked={formData.integracao_whatsapp}
+                  onCheckedChange={(checked) => setFormData(prev => ({ 
                     ...prev, 
-                    whatsappIntegration: checked 
+                    integracao_whatsapp: checked 
                   }))}
                 />
               </div>
@@ -266,24 +292,23 @@ export const Settings = () => {
         </Card>
       </div>
 
-      {/* Integração com Supabase */}
+      {/* Status da Integração */}
       <Card className="nova-card animate-fade-in">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-gray-800">
-            Integração com Supabase
+            Status da Integração
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-medium text-blue-800 mb-2">Status da Integração</h4>
-            <p className="text-sm text-blue-700 mb-3">
-              A página de agendamento está conectada com o Supabase. Todas as configurações 
-              feitas aqui serão sincronizadas automaticamente.
-            </p>
-            <div className="flex items-center space-x-2">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center space-x-2 mb-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm text-green-700 font-medium">Conectado</span>
+              <span className="text-sm text-green-700 font-medium">Conectado ao Supabase</span>
             </div>
+            <p className="text-sm text-green-700">
+              O CRM está totalmente integrado ao banco de dados. Todas as configurações 
+              são salvas automaticamente e sincronizadas em tempo real.
+            </p>
           </div>
         </CardContent>
       </Card>
