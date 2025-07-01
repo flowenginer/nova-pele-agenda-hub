@@ -25,7 +25,7 @@ export const useSupabaseCRM = () => {
         .order('created_at', { ascending: false });
 
       if (clientsError) throw clientsError;
-      setClients(clientsData || []);
+      setClients((clientsData || []) as DatabaseClient[]);
 
       // Fetch professionals
       const { data: professionalsData, error: professionalsError } = await supabase
@@ -34,7 +34,7 @@ export const useSupabaseCRM = () => {
         .order('nome');
 
       if (professionalsError) throw professionalsError;
-      setProfessionals(professionalsData || []);
+      setProfessionals((professionalsData || []) as DatabaseProfessional[]);
 
       // Fetch services
       const { data: servicesData, error: servicesError } = await supabase
@@ -43,7 +43,7 @@ export const useSupabaseCRM = () => {
         .order('nome');
 
       if (servicesError) throw servicesError;
-      setServices(servicesData || []);
+      setServices((servicesData || []) as DatabaseService[]);
 
       // Fetch appointments
       const { data: appointmentsData, error: appointmentsError } = await supabase
@@ -52,7 +52,7 @@ export const useSupabaseCRM = () => {
         .order('data_agendamento', { ascending: false });
 
       if (appointmentsError) throw appointmentsError;
-      setAppointments(appointmentsData || []);
+      setAppointments((appointmentsData || []) as DatabaseAppointment[]);
 
       // Fetch system settings
       const { data: settingsData, error: settingsError } = await supabase
@@ -62,7 +62,7 @@ export const useSupabaseCRM = () => {
         .single();
 
       if (settingsError && settingsError.code !== 'PGRST116') throw settingsError;
-      setSettings(settingsData || null);
+      setSettings(settingsData as SystemSettings || null);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -91,7 +91,7 @@ export const useSupabaseCRM = () => {
 
       if (error) throw error;
 
-      setClients(prev => [data, ...prev]);
+      setClients(prev => [data as DatabaseClient, ...prev]);
       toast({
         title: "Cliente adicionado",
         description: "Cliente foi adicionado com sucesso.",
@@ -119,7 +119,7 @@ export const useSupabaseCRM = () => {
 
       if (error) throw error;
 
-      setClients(prev => prev.map(c => c.id === id ? data : c));
+      setClients(prev => prev.map(c => c.id === id ? data as DatabaseClient : c));
       toast({
         title: "Cliente atualizado",
         description: "Dados do cliente foram atualizados.",
@@ -147,7 +147,7 @@ export const useSupabaseCRM = () => {
 
       if (error) throw error;
 
-      setAppointments(prev => [data, ...prev]);
+      setAppointments(prev => [data as DatabaseAppointment, ...prev]);
       toast({
         title: "Agendamento criado",
         description: "Agendamento foi criado com sucesso.",
@@ -175,7 +175,7 @@ export const useSupabaseCRM = () => {
 
       if (error) throw error;
 
-      setAppointments(prev => prev.map(a => a.id === id ? data : a));
+      setAppointments(prev => prev.map(a => a.id === id ? data as DatabaseAppointment : a));
       toast({
         title: "Status atualizado",
         description: "Status do agendamento foi atualizado.",
@@ -203,7 +203,7 @@ export const useSupabaseCRM = () => {
 
       if (error) throw error;
 
-      setProfessionals(prev => [...prev, data]);
+      setProfessionals(prev => [...prev, data as DatabaseProfessional]);
       toast({
         title: "Profissional adicionado",
         description: "Profissional foi adicionado com sucesso.",
@@ -231,7 +231,7 @@ export const useSupabaseCRM = () => {
 
       if (error) throw error;
 
-      setServices(prev => [...prev, data]);
+      setServices(prev => [...prev, data as DatabaseService]);
       toast({
         title: "Serviço adicionado",
         description: "Serviço foi adicionado com sucesso.",
@@ -262,7 +262,7 @@ export const useSupabaseCRM = () => {
 
       if (error) throw error;
 
-      setSettings(data);
+      setSettings(data as SystemSettings);
       toast({
         title: "Configurações salvas",
         description: "Configurações foram atualizadas com sucesso.",

@@ -39,22 +39,113 @@ const Index = () => {
     await signOut();
   };
 
+  const handleStatusChange = (appointmentId: string, status: any) => {
+    const id = parseInt(appointmentId);
+    crmData.updateAppointmentStatus(id, status);
+  };
+
+  const handleWhatsAppClick = (phone: string) => {
+    window.open(`https://wa.me/${phone}`, '_blank');
+  };
+
   const renderActiveSection = () => {
     switch (activeSection) {
       case 'dashboard':
-        return <Dashboard {...crmData} />;
+        return <Dashboard metrics={crmData.dashboardMetrics} />;
       case 'appointments':
-        return <AppointmentsKanban {...crmData} />;
+        return (
+          <AppointmentsKanban
+            appointments={crmData.appointments.map(apt => ({
+              id: apt.id.toString(),
+              client: {
+                name: apt.cliente_nome,
+                phone: apt.cliente_telefone,
+                whatsapp: apt.cliente_telefone
+              },
+              professional: {
+                name: crmData.professionals.find(p => p.id === apt.profissional_id)?.nome || 'N/A'
+              },
+              service: {
+                name: crmData.services.find(s => s.id === apt.servico_id)?.nome || 'N/A'
+              },
+              date: apt.data_agendamento,
+              time: apt.hora_agendamento,
+              status: apt.status as any,
+              value: apt.valor || 0
+            }))}
+            onStatusChange={handleStatusChange}
+            onWhatsAppClick={handleWhatsAppClick}
+          />
+        );
       case 'clients':
-        return <ClientsManagement {...crmData} />;
+        return (
+          <ClientsManagement
+            clients={crmData.clients.map(client => ({
+              id: client.id,
+              name: client.nome,
+              phone: client.telefone,
+              whatsapp: client.whatsapp,
+              email: client.email,
+              birthDate: client.data_nascimento,
+              address: client.endereco,
+              status: client.status as any,
+              notes: client.observacoes,
+              createdAt: client.created_at,
+              updatedAt: client.updated_at
+            }))}
+            onAddClient={(clientData) => {
+              crmData.addClient({
+                nome: clientData.name,
+                telefone: clientData.phone,
+                whatsapp: clientData.whatsapp,
+                email: clientData.email,
+                data_nascimento: clientData.birthDate,
+                endereco: clientData.address,
+                status: clientData.status,
+                observacoes: clientData.notes
+              });
+            }}
+          />
+        );
       case 'professionals':
-        return <ProfessionalsManagement {...crmData} />;
+        return (
+          <ProfessionalsManagement
+            professionals={crmData.professionals.map(prof => ({
+              id: prof.id.toString(),
+              name: prof.nome,
+              specialty: prof.especialidade,
+              photoUrl: prof.photo_url,
+              email: prof.email,
+              phone: prof.telefone,
+              specialties: prof.especialidades || [],
+              workHours: {
+                start: prof.horario_inicio || '08:00',
+                end: prof.horario_fim || '18:00'
+              },
+              workDays: prof.dias_trabalho || [1, 2, 3, 4, 5],
+              active: prof.ativo !== false
+            }))}
+            onUpdateProfessionals={() => crmData.refetch()}
+          />
+        );
       case 'communication':
-        return <Communication />;
+        return <Communication clients={crmData.clients.map(client => ({
+          id: client.id,
+          name: client.nome,
+          phone: client.telefone,
+          whatsapp: client.whatsapp,
+          email: client.email,
+          birthDate: client.data_nascimento,
+          address: client.endereco,
+          status: client.status as any,
+          notes: client.observacoes,
+          createdAt: client.created_at,
+          updatedAt: client.updated_at
+        }))} />;
       case 'settings':
         return <Settings settings={crmData.settings} updateSettings={crmData.updateSettings} />;
       default:
-        return <Dashboard {...crmData} />;
+        return <Dashboard metrics={crmData.dashboardMetrics} />;
     }
   };
 
