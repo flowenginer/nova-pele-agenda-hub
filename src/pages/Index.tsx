@@ -57,19 +57,42 @@ const Index = () => {
           <AppointmentsKanban
             appointments={crmData.appointments.map(apt => ({
               id: apt.id.toString(),
-              clientId: apt.cliente_id || '',
+              clientId: apt.cliente_id || apt.id.toString(),
               professionalId: apt.profissional_id.toString(),
               serviceId: apt.servico_id.toString(),
               client: {
+                id: apt.cliente_id || apt.id.toString(),
                 name: apt.cliente_nome,
                 phone: apt.cliente_telefone,
-                whatsapp: apt.cliente_telefone
+                whatsapp: apt.cliente_telefone,
+                email: apt.email || '',
+                status: 'cliente' as any,
+                createdAt: apt.created_at,
+                updatedAt: apt.updated_at || apt.created_at
               },
               professional: {
-                name: crmData.professionals.find(p => p.id === apt.profissional_id)?.nome || 'N/A'
+                id: apt.profissional_id.toString(),
+                name: crmData.professionals.find(p => p.id === apt.profissional_id)?.nome || 'N/A',
+                email: crmData.professionals.find(p => p.id === apt.profissional_id)?.email || '',
+                phone: crmData.professionals.find(p => p.id === apt.profissional_id)?.telefone || '',
+                specialties: crmData.professionals.find(p => p.id === apt.profissional_id)?.especialidades || [],
+                workingHours: {
+                  start: crmData.professionals.find(p => p.id === apt.profissional_id)?.horario_inicio || '08:00',
+                  end: crmData.professionals.find(p => p.id === apt.profissional_id)?.horario_fim || '18:00'
+                },
+                workingDays: crmData.professionals.find(p => p.id === apt.profissional_id)?.dias_trabalho || [1, 2, 3, 4, 5],
+                isActive: crmData.professionals.find(p => p.id === apt.profissional_id)?.ativo !== false,
+                avatar: crmData.professionals.find(p => p.id === apt.profissional_id)?.photo_url
               },
               service: {
-                name: crmData.services.find(s => s.id === apt.servico_id)?.nome || 'N/A'
+                id: apt.servico_id.toString(),
+                name: crmData.services.find(s => s.id === apt.servico_id)?.nome || 'N/A',
+                description: crmData.services.find(s => s.id === apt.servico_id)?.descricao || '',
+                duration: crmData.services.find(s => s.id === apt.servico_id)?.duracao_minutos || 60,
+                price: crmData.services.find(s => s.id === apt.servico_id)?.preco || 0,
+                category: crmData.services.find(s => s.id === apt.servico_id)?.categoria || '',
+                isActive: crmData.services.find(s => s.id === apt.servico_id)?.ativo !== false,
+                professionals: []
               },
               date: apt.data_agendamento,
               time: apt.hora_agendamento,
