@@ -58,7 +58,7 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
         {statusColumns.map(column => {
           const columnAppointments = getAppointmentsByStatus(column.id);
           return (
-            <div key={column.id} className={`rounded-lg border-2 ${column.color} flex flex-col h-full max-h-[calc(100vh-300px)]`}>
+            <div key={column.id} className={`rounded-lg border-2 ${column.color} flex flex-col h-full`}>
               <div className="flex items-center justify-between p-4 flex-shrink-0 border-b border-current border-opacity-20">
                 <h3 className="font-semibold text-gray-800">{column.title}</h3>
                 <Badge variant="secondary" className="text-xs">
@@ -66,7 +66,7 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
                 </Badge>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-4">
+              <ScrollArea className="flex-1 p-4">
                 <div className="space-y-3">
                   {columnAppointments.map(appointment => (
                     <Card key={appointment.id} className="bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer">
@@ -74,7 +74,7 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <h4 className="font-medium text-gray-800 truncate">
-                              {appointment.client?.name || 'Cliente não encontrado'}
+                              {appointment.professional?.name || 'Profissional não encontrado'}
                             </h4>
                             <Badge 
                               className={`text-xs cursor-pointer transition-colors ${statusColors[appointment.status]}`}
@@ -89,26 +89,15 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
                           
                           <div className="space-y-2 text-sm text-gray-600">
                             <div className="flex items-center space-x-2">
-                              <User className="w-4 h-4" />
-                              <span className="truncate">{appointment.professional?.name}</span>
-                            </div>
-                            
-                            <div className="flex items-center space-x-2">
                               <Calendar className="w-4 h-4" />
-                              <span>{new Date(appointment.date).toLocaleDateString('pt-BR')}</span>
+                              <span>{new Date(appointment.date).toLocaleDateString('pt-BR')} - {appointment.time}</span>
                             </div>
                             
                             <div className="flex items-center space-x-2">
                               <Clock className="w-4 h-4" />
-                              <span>{appointment.time} - {appointment.service?.name}</span>
+                              <span className="truncate">{appointment.service?.name}</span>
                             </div>
                           </div>
-
-                          {appointment.value && appointment.value > 0 && (
-                            <div className="text-sm font-semibold text-nova-pink-600">
-                              R$ {appointment.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                            </div>
-                          )}
 
                           {appointment.client?.whatsapp && (
                             <Button
@@ -133,7 +122,7 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
                     </div>
                   )}
                 </div>
-              </div>
+              </ScrollArea>
             </div>
           );
         })}

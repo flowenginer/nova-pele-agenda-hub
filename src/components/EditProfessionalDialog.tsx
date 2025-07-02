@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -37,33 +36,63 @@ export const EditProfessionalDialog = ({ professional, onUpdate }: EditProfessio
       }
 
       const file = event.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${professional.id}-${Math.random()}.${fileExt}`;
-      const filePath = fileName;
+      
+      // Validar tipo de arquivo
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Erro",
+          description: "Por favor, selecione apenas arquivos de imagem.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      const { error: uploadError } = await supabase.storage
+      // Validar tamanho do arquivo (5MB máximo)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Erro",
+          description: "A imagem deve ter no máximo 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `professional-${professional.id}-${Date.now()}.${fileExt}`;
+
+      console.log('Iniciando upload da foto...');
+
+      const { error: uploadError, data } = await supabase.storage
         .from('profile-photos')
-        .upload(filePath, file);
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
+        console.error('Erro no upload:', uploadError);
         throw uploadError;
       }
 
-      const { data } = supabase.storage
-        .from('profile-photos')
-        .getPublicUrl(filePath);
+      console.log('Upload realizado com sucesso:', data);
 
-      setFormData(prev => ({ ...prev, avatar: data.publicUrl }));
+      const { data: publicUrlData } = supabase.storage
+        .from('profile-photos')
+        .getPublicUrl(fileName);
+
+      console.log('URL pública gerada:', publicUrlData.publicUrl);
+
+      setFormData(prev => ({ ...prev, avatar: publicUrlData.publicUrl }));
       
       toast({
-        title: "Foto enviada",
-        description: "Foto do profissional foi enviada com sucesso.",
+        title: "Sucesso",
+        description: "Foto enviada com sucesso!",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro no upload:', error);
       toast({
         title: "Erro no upload",
-        description: "Não foi possível enviar a foto.",
+        description: error.message || "Não foi possível enviar a foto.",
         variant: "destructive",
       });
     } finally {
@@ -85,6 +114,11 @@ export const EditProfessionalDialog = ({ professional, onUpdate }: EditProfessio
 
     onUpdate(professional.id, updates);
     setOpen(false);
+    
+    toast({
+      title: "Sucesso",
+      description: "Profissional atualizado com sucesso!",
+    });
   };
 
   return (
