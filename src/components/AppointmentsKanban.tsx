@@ -14,13 +14,14 @@ interface AppointmentsKanbanProps {
 }
 
 const statusColumns = [
+  { id: 'inicio_contato', title: 'Início Contato', color: 'bg-orange-50 border-orange-200' },
   { id: 'agendado', title: 'Agendado', color: 'bg-blue-50 border-blue-200' },
   { id: 'confirmado', title: 'Confirmado', color: 'bg-green-50 border-green-200' },
-  { id: 'em_atendimento', title: 'Em Atendimento', color: 'bg-yellow-50 border-yellow-200' },
   { id: 'concluido', title: 'Concluído', color: 'bg-purple-50 border-purple-200' }
 ];
 
 const statusColors = {
+  inicio_contato: 'bg-orange-100 text-orange-800 hover:bg-orange-200',
   agendado: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
   confirmado: 'bg-green-100 text-green-800 hover:bg-green-200',
   em_atendimento: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
@@ -44,7 +45,7 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
 
   return (
     <div className="space-y-6 h-full">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-shrink-0">
         <div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-nova-pink-600 to-nova-purple-600 bg-clip-text text-transparent">
             Agendamentos
@@ -53,19 +54,19 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 h-[calc(100vh-220px)]">
         {statusColumns.map(column => {
           const columnAppointments = getAppointmentsByStatus(column.id);
           return (
-            <div key={column.id} className={`rounded-lg border-2 ${column.color} p-4 flex flex-col h-full`}>
-              <div className="flex items-center justify-between mb-4 flex-shrink-0">
+            <div key={column.id} className={`rounded-lg border-2 ${column.color} flex flex-col h-full`}>
+              <div className="flex items-center justify-between p-4 flex-shrink-0 border-b border-current border-opacity-20">
                 <h3 className="font-semibold text-gray-800">{column.title}</h3>
                 <Badge variant="secondary" className="text-xs">
                   {columnAppointments.length}
                 </Badge>
               </div>
               
-              <ScrollArea className="flex-1 pr-4">
+              <ScrollArea className="flex-1 p-4">
                 <div className="space-y-3">
                   {columnAppointments.map(appointment => (
                     <Card key={appointment.id} className="bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer">
@@ -143,9 +144,9 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
 
 const getNextStatus = (currentStatus: Appointment['status']): Appointment['status'] | null => {
   const statusFlow = {
+    inicio_contato: 'agendado',
     agendado: 'confirmado',
-    confirmado: 'em_atendimento',
-    em_atendimento: 'concluido',
+    confirmado: 'concluido',
     concluido: null,
     cancelado: null,
     nao_compareceu: null

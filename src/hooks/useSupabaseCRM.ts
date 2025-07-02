@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -11,11 +10,15 @@ export const useSupabaseCRM = () => {
   const [appointments, setAppointments] = useState<DatabaseAppointment[]>([]);
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasProcessedSync, setHasProcessedSync] = useState(false);
   const { toast } = useToast();
 
-  // Função para sincronizar clientes dos agendamentos
+  // Função para sincronizar clientes dos agendamentos (apenas uma vez)
   const syncClientsFromAppointments = async (appointmentsData: DatabaseAppointment[]) => {
+    if (hasProcessedSync) return;
+    
     try {
+      console.log('Iniciando sincronização de clientes...');
       const clientsToCreate = [];
       
       for (const appointment of appointmentsData) {
@@ -53,6 +56,8 @@ export const useSupabaseCRM = () => {
           console.log(`${newClients?.length || 0} novos clientes sincronizados dos agendamentos`);
         }
       }
+      
+      setHasProcessedSync(true);
     } catch (error) {
       console.error('Erro na sincronização de clientes:', error);
     }
@@ -99,8 +104,8 @@ export const useSupabaseCRM = () => {
       if (appointmentsError) throw appointmentsError;
       setAppointments((appointmentsData || []) as DatabaseAppointment[]);
 
-      // Sincronizar clientes dos agendamentos
-      if (appointmentsData && appointmentsData.length > 0) {
+      // Sincronizar clientes dos agendamentos (apenas uma vez)
+      if (appointmentsData && appointmentsData.length > 0 && !hasProcessedSync) {
         await syncClientsFromAppointments(appointmentsData);
         
         // Recarregar clientes após sincronização
@@ -300,6 +305,34 @@ export const useSupabaseCRM = () => {
     }
   };
 
+  const updateProfessional = async (id: number, updates: Partial<DatabaseProfessional>) => {
+    try {
+      const { data, error } = await supabase
+        .from('profissionais')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setProfessionals(prev => prev.map(p => p.id === id ? data as DatabaseProfessional : p));
+      toast({
+        title: "Profissional atualizado",
+        description: "Dados do profissional foram atualizados.",
+      });
+      return data;
+    } catch (error) {
+      console.error('Error updating professional:', error);
+      toast({
+        title: "Erro ao atualizar profissional",
+        description: "Não foi possível atualizar o profissional.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   // Service operations
   const addService = async (serviceData: Omit<DatabaseService, 'id' | 'created_at' | 'updated_at'>) => {
     try {
@@ -398,6 +431,7 @@ export const useSupabaseCRM = () => {
     addAppointment,
     updateAppointmentStatus,
     addProfessional,
+    updateProfessional,
     addService,
     updateSettings,
     refetch: fetchAllData

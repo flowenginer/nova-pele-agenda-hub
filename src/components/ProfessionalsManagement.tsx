@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { EditProfessionalDialog } from './EditProfessionalDialog';
 import { Professional } from '../types/crm';
 import { User, Plus, Mail, Phone } from 'lucide-react';
 
@@ -44,6 +45,13 @@ export const ProfessionalsManagement = ({ professionals, onUpdateProfessionals }
       isActive: true
     });
     setShowAddForm(false);
+  };
+
+  const handleUpdateProfessional = (professionalId: string, updates: Partial<Professional>) => {
+    const updatedProfessionals = professionals.map(p =>
+      p.id === professionalId ? { ...p, ...updates } : p
+    );
+    onUpdateProfessionals(updatedProfessionals);
   };
 
   const toggleProfessionalStatus = (professionalId: string) => {
@@ -176,8 +184,12 @@ export const ProfessionalsManagement = ({ professionals, onUpdateProfessionals }
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-r from-nova-pink-500 to-nova-purple-500 rounded-full flex items-center justify-center">
-                    <User className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 bg-gradient-to-r from-nova-pink-500 to-nova-purple-500 rounded-full flex items-center justify-center overflow-hidden">
+                    {professional.avatar ? (
+                      <img src={professional.avatar} alt={professional.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-6 h-6 text-white" />
+                    )}
                   </div>
                   <div>
                     <CardTitle className="text-lg font-semibold text-gray-800">
@@ -237,6 +249,13 @@ export const ProfessionalsManagement = ({ professionals, onUpdateProfessionals }
                     </Badge>
                   ))}
                 </div>
+              </div>
+
+              <div className="pt-2">
+                <EditProfessionalDialog
+                  professional={professional}
+                  onUpdate={handleUpdateProfessional}
+                />
               </div>
             </CardContent>
           </Card>

@@ -48,6 +48,12 @@ const Index = () => {
     window.open(`https://wa.me/${phone}`, '_blank');
   };
 
+  const handleUpdateProfessionals = (updatedProfessionals: any[]) => {
+    // Esta função será chamada quando houver mudanças nos profissionais
+    // mas como estamos usando o Supabase, vamos recarregar os dados
+    crmData.refetch();
+  };
+
   const renderActiveSection = () => {
     switch (activeSection) {
       case 'dashboard':
@@ -152,7 +158,7 @@ const Index = () => {
               isActive: prof.ativo !== false,
               avatar: prof.photo_url
             }))}
-            onUpdateProfessionals={() => crmData.refetch()}
+            onUpdateProfessionals={handleUpdateProfessionals}
           />
         );
       case 'communication':
