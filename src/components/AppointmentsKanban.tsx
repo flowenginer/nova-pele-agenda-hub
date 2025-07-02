@@ -54,7 +54,7 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 h-[calc(100vh-220px)]">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" style={{ height: 'calc(100vh - 250px)' }}>
         {statusColumns.map(column => {
           const columnAppointments = getAppointmentsByStatus(column.id);
           return (
@@ -104,9 +104,9 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
                             </div>
                           </div>
 
-                          {appointment.value && (
+                          {appointment.value && appointment.value > 0 && (
                             <div className="text-sm font-semibold text-nova-pink-600">
-                              R$ {appointment.value.toLocaleString('pt-BR')}
+                              R$ {appointment.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </div>
                           )}
 

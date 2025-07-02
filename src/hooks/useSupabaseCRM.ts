@@ -10,28 +10,19 @@ export const useSupabaseCRM = () => {
   const [appointments, setAppointments] = useState<DatabaseAppointment[]>([]);
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hasProcessedSync, setHasProcessedSync] = useState(false);
   const { toast } = useToast();
 
-  // Função para sincronizar clientes dos agendamentos (apenas uma vez)
-  const syncClientsFromAppointments = async (appointmentsData: DatabaseAppointment[]) => {
-    if (hasProcessedSync) return;
-    
+  // Função para sincronizar clientes dos agendamentos (otimizada para evitar duplicação)
+  const syncClientsFromAppointments = async (appointmentsData: DatabaseAppointment[], existingClients: DatabaseClient[]) => {
     try {
-      console.log('Iniciando sincronização de clientes...');
+      console.log('Verificando necessidade de sincronização de clientes...');
       const clientsToCreate = [];
+      const existingPhones = new Set(existingClients.map(c => c.telefone));
       
       for (const appointment of appointmentsData) {
         if (appointment.cliente_nome && appointment.cliente_telefone) {
-          // Verificar se cliente já existe
-          const existingClient = await supabase
-            .from('clientes')
-            .select('id')
-            .eq('telefone', appointment.cliente_telefone)
-            .maybeSingle();
-
-          if (!existingClient.data) {
-            // Cliente não existe, adicionar à lista para criar
+          // Verificar se cliente já existe na lista local ou no banco
+          if (!existingPhones.has(appointment.cliente_telefone)) {
             clientsToCreate.push({
               nome: appointment.cliente_nome,
               telefone: appointment.cliente_telefone,
@@ -39,11 +30,13 @@ export const useSupabaseCRM = () => {
               email: appointment.email || null,
               status: 'cliente'
             });
+            // Adicionar à lista local para evitar duplicatas na mesma sincronização
+            existingPhones.add(appointment.cliente_telefone);
           }
         }
       }
 
-      // Criar clientes em lote se houver algum
+      // Criar clientes em lote se houver algum novo
       if (clientsToCreate.length > 0) {
         const { data: newClients, error } = await supabase
           .from('clientes')
@@ -54,12 +47,14 @@ export const useSupabaseCRM = () => {
           console.error('Erro ao sincronizar clientes:', error);
         } else {
           console.log(`${newClients?.length || 0} novos clientes sincronizados dos agendamentos`);
+          return newClients as DatabaseClient[];
         }
       }
       
-      setHasProcessedSync(true);
+      return [];
     } catch (error) {
       console.error('Erro na sincronização de clientes:', error);
+      return [];
     }
   };
 
@@ -68,14 +63,15 @@ export const useSupabaseCRM = () => {
     try {
       setLoading(true);
 
-      // Fetch clients
+      // Fetch clients first
       const { data: clientsData, error: clientsError } = await supabase
         .from('clientes')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (clientsError) throw clientsError;
-      setClients((clientsData || []) as DatabaseClient[]);
+      const currentClients = (clientsData || []) as DatabaseClient[];
+      setClients(currentClients);
 
       // Fetch professionals
       const { data: professionalsData, error: professionalsError } = await supabase
@@ -104,18 +100,13 @@ export const useSupabaseCRM = () => {
       if (appointmentsError) throw appointmentsError;
       setAppointments((appointmentsData || []) as DatabaseAppointment[]);
 
-      // Sincronizar clientes dos agendamentos (apenas uma vez)
-      if (appointmentsData && appointmentsData.length > 0 && !hasProcessedSync) {
-        await syncClientsFromAppointments(appointmentsData);
+      // Sincronizar clientes dos agendamentos apenas se necessário
+      if (appointmentsData && appointmentsData.length > 0) {
+        const newClients = await syncClientsFromAppointments(appointmentsData, currentClients);
         
-        // Recarregar clientes após sincronização
-        const { data: updatedClientsData } = await supabase
-          .from('clientes')
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        if (updatedClientsData) {
-          setClients(updatedClientsData as DatabaseClient[]);
+        if (newClients.length > 0) {
+          // Atualizar lista de clientes com os novos
+          setClients(prev => [...newClients, ...prev]);
         }
       }
 
@@ -216,13 +207,9 @@ export const useSupabaseCRM = () => {
       
       // Sincronizar cliente automaticamente se não existir
       if (appointmentData.cliente_nome && appointmentData.cliente_telefone) {
-        const existingClient = await supabase
-          .from('clientes')
-          .select('id')
-          .eq('telefone', appointmentData.cliente_telefone)
-          .maybeSingle();
-
-        if (!existingClient.data) {
+        const existingClient = clients.find(c => c.telefone === appointmentData.cliente_telefone);
+        
+        if (!existingClient) {
           await addClient({
             nome: appointmentData.cliente_nome,
             telefone: appointmentData.cliente_telefone,
