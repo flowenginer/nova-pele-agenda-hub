@@ -5,17 +5,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Label } from '@/components/ui/label';
 import { EditProfessionalDialog } from './EditProfessionalDialog';
 import { Professional } from '../types/crm';
-import { User, Plus, Mail, Phone } from 'lucide-react';
+import { User, Plus, Mail, Phone, Upload } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProfessionalsManagementProps {
   professionals: Professional[];
   onUpdateProfessionals: (professionals: Professional[]) => void;
+  onAddProfessional: (professional: Omit<Professional, 'id'>) => void;
 }
 
-export const ProfessionalsManagement = ({ professionals, onUpdateProfessionals }: ProfessionalsManagementProps) => {
+export const ProfessionalsManagement = ({ professionals, onUpdateProfessionals, onAddProfessional }: ProfessionalsManagementProps) => {
   const [showAddForm, setShowAddForm] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
   const [newProfessional, setNewProfessional] = useState({
     name: '',
     email: '',
@@ -23,18 +30,61 @@ export const ProfessionalsManagement = ({ professionals, onUpdateProfessionals }
     specialties: '',
     workingHours: { start: '08:00', end: '18:00' },
     workingDays: [1, 2, 3, 4, 5],
-    isActive: true
+    isActive: true,
+    avatar: ''
   });
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      
+      if (!event.target.files || event.target.files.length === 0) {
+        return;
+      }
+
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `new-professional-${Date.now()}.${fileExt}`;
+      const filePath = fileName;
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile-photos')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from('profile-photos')
+        .getPublicUrl(filePath);
+
+      setNewProfessional(prev => ({ ...prev, avatar: data.publicUrl }));
+      
+      toast({
+        title: "Foto enviada",
+        description: "Foto do profissional foi enviada com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      toast({
+        title: "Erro no upload",
+        description: "Não foi possível enviar a foto.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleAddProfessional = (e: React.FormEvent) => {
     e.preventDefault();
-    const professional: Professional = {
-      id: Date.now().toString(),
+    const professional = {
       ...newProfessional,
       specialties: newProfessional.specialties.split(',').map(s => s.trim()).filter(s => s)
     };
     
-    onUpdateProfessionals([...professionals, professional]);
+    onAddProfessional(professional);
     setNewProfessional({
       name: '',
       email: '',
@@ -42,7 +92,8 @@ export const ProfessionalsManagement = ({ professionals, onUpdateProfessionals }
       specialties: '',
       workingHours: { start: '08:00', end: '18:00' },
       workingDays: [1, 2, 3, 4, 5],
-      isActive: true
+      isActive: true,
+      avatar: ''
     });
     setShowAddForm(false);
   };
@@ -94,6 +145,32 @@ export const ProfessionalsManagement = ({ professionals, onUpdateProfessionals }
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAddProfessional} className="space-y-4">
+              <div className="flex flex-col items-center space-y-4">
+                <Avatar className="w-20 h-20">
+                  <AvatarImage src={newProfessional.avatar} alt="Novo profissional" />
+                  <AvatarFallback>
+                    <User className="w-8 h-8" />
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="new-photo-upload" className="cursor-pointer">
+                    <div className="flex items-center space-x-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 rounded-md transition-colors">
+                      <Upload className="w-4 h-4" />
+                      <span>{uploading ? 'Enviando...' : 'Escolher Foto'}</span>
+                    </div>
+                  </Label>
+                  <Input
+                    id="new-photo-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">Nome *</label>
@@ -161,7 +238,7 @@ export const ProfessionalsManagement = ({ professionals, onUpdateProfessionals }
               </div>
               
               <div className="flex space-x-3">
-                <Button type="submit" className="nova-button">
+                <Button type="submit" className="nova-button" disabled={uploading}>
                   Salvar Profissional
                 </Button>
                 <Button 
@@ -184,13 +261,12 @@ export const ProfessionalsManagement = ({ professionals, onUpdateProfessionals }
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-r from-nova-pink-500 to-nova-purple-500 rounded-full flex items-center justify-center overflow-hidden">
-                    {professional.avatar ? (
-                      <img src={professional.avatar} alt={professional.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <User className="w-6 h-6 text-white" />
-                    )}
-                  </div>
+                  <Avatar className="w-12 h-12">
+                    <AvatarImage src={professional.avatar} alt={professional.name} />
+                    <AvatarFallback>
+                      <User className="w-6 h-6" />
+                    </AvatarFallback>
+                  </Avatar>
                   <div>
                     <CardTitle className="text-lg font-semibold text-gray-800">
                       {professional.name}

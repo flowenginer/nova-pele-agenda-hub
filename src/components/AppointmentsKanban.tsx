@@ -44,8 +44,8 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
   };
 
   return (
-    <div className="space-y-6 h-full">
-      <div className="flex items-center justify-between flex-shrink-0">
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between flex-shrink-0 mb-6">
         <div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-nova-pink-600 to-nova-purple-600 bg-clip-text text-transparent">
             Agendamentos
@@ -54,11 +54,11 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" style={{ height: 'calc(100vh - 250px)' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 flex-1 min-h-0">
         {statusColumns.map(column => {
           const columnAppointments = getAppointmentsByStatus(column.id);
           return (
-            <div key={column.id} className={`rounded-lg border-2 ${column.color} flex flex-col h-full`}>
+            <div key={column.id} className={`rounded-lg border-2 ${column.color} flex flex-col h-full max-h-[calc(100vh-300px)]`}>
               <div className="flex items-center justify-between p-4 flex-shrink-0 border-b border-current border-opacity-20">
                 <h3 className="font-semibold text-gray-800">{column.title}</h3>
                 <Badge variant="secondary" className="text-xs">
@@ -66,7 +66,7 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
                 </Badge>
               </div>
               
-              <ScrollArea className="flex-1 p-4">
+              <div className="flex-1 overflow-y-auto p-4">
                 <div className="space-y-3">
                   {columnAppointments.map(appointment => (
                     <Card key={appointment.id} className="bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer">
@@ -133,7 +133,7 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
                     </div>
                   )}
                 </div>
-              </ScrollArea>
+              </div>
             </div>
           );
         })}

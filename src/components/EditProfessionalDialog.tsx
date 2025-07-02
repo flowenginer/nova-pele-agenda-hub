@@ -4,8 +4,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Edit } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Edit, Upload, User } from 'lucide-react';
 import { Professional } from '../types/crm';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface EditProfessionalDialogProps {
   professional: Professional;
@@ -14,6 +17,8 @@ interface EditProfessionalDialogProps {
 
 export const EditProfessionalDialog = ({ professional, onUpdate }: EditProfessionalDialogProps) => {
   const [open, setOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: professional.name,
     email: professional.email || '',
@@ -22,6 +27,49 @@ export const EditProfessionalDialog = ({ professional, onUpdate }: EditProfessio
     workingHours: professional.workingHours,
     avatar: professional.avatar || ''
   });
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      
+      if (!event.target.files || event.target.files.length === 0) {
+        return;
+      }
+
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${professional.id}-${Math.random()}.${fileExt}`;
+      const filePath = fileName;
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile-photos')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from('profile-photos')
+        .getPublicUrl(filePath);
+
+      setFormData(prev => ({ ...prev, avatar: data.publicUrl }));
+      
+      toast({
+        title: "Foto enviada",
+        description: "Foto do profissional foi enviada com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      toast({
+        title: "Erro no upload",
+        description: "Não foi possível enviar a foto.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +100,32 @@ export const EditProfessionalDialog = ({ professional, onUpdate }: EditProfessio
           <DialogTitle>Editar Profissional</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex flex-col items-center space-y-4">
+            <Avatar className="w-20 h-20">
+              <AvatarImage src={formData.avatar} alt={formData.name} />
+              <AvatarFallback>
+                <User className="w-8 h-8" />
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="flex flex-col space-y-2">
+              <Label htmlFor="photo-upload" className="cursor-pointer">
+                <div className="flex items-center space-x-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 rounded-md transition-colors">
+                  <Upload className="w-4 h-4" />
+                  <span>{uploading ? 'Enviando...' : 'Escolher Foto'}</span>
+                </div>
+              </Label>
+              <Input
+                id="photo-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                disabled={uploading}
+                className="hidden"
+              />
+            </div>
+          </div>
+          
           <div className="space-y-2">
             <Label htmlFor="name">Nome</Label>
             <Input
@@ -78,16 +152,6 @@ export const EditProfessionalDialog = ({ professional, onUpdate }: EditProfessio
               id="phone"
               value={formData.phone}
               onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="avatar">URL da Foto</Label>
-            <Input
-              id="avatar"
-              value={formData.avatar}
-              onChange={(e) => setFormData(prev => ({ ...prev, avatar: e.target.value }))}
-              placeholder="https://exemplo.com/foto.jpg"
             />
           </div>
           
@@ -134,7 +198,7 @@ export const EditProfessionalDialog = ({ professional, onUpdate }: EditProfessio
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button type="submit">
+            <Button type="submit" disabled={uploading}>
               Salvar Alterações
             </Button>
           </div>

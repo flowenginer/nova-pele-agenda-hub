@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabaseCRM } from '@/hooks/useSupabaseCRM';
@@ -52,6 +51,24 @@ const Index = () => {
     // Esta função será chamada quando houver mudanças nos profissionais
     // mas como estamos usando o Supabase, vamos recarregar os dados
     crmData.refetch();
+  };
+
+  const handleAddProfessional = async (professionalData: any) => {
+    try {
+      await crmData.addProfessional({
+        nome: professionalData.name,
+        email: professionalData.email,
+        telefone: professionalData.phone,
+        especialidades: professionalData.specialties,
+        horario_inicio: professionalData.workingHours.start,
+        horario_fim: professionalData.workingHours.end,
+        dias_trabalho: professionalData.workingDays,
+        ativo: professionalData.isActive,
+        photo_url: professionalData.avatar
+      });
+    } catch (error) {
+      console.error('Erro ao adicionar profissional:', error);
+    }
   };
 
   const renderActiveSection = () => {
@@ -159,6 +176,7 @@ const Index = () => {
               avatar: prof.photo_url
             }))}
             onUpdateProfessionals={handleUpdateProfessionals}
+            onAddProfessional={handleAddProfessional}
           />
         );
       case 'communication':
