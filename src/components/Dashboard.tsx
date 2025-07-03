@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardMetrics } from '../types/crm';
-import { Calendar, Users, User, TrendingUp } from 'lucide-react';
+import { Calendar, Users, User, UserPlus } from 'lucide-react';
 
 interface DashboardProps {
   metrics: DashboardMetrics;
@@ -98,16 +98,16 @@ export const Dashboard = ({ metrics }: DashboardProps) => {
         <Card className="nova-card animate-fade-in">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
-              Receita do Mês
+              Novos Contatos
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-nova-purple-500" />
+            <UserPlus className="h-4 w-4 text-nova-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-nova-purple-600">
-              R$ {metrics.revenue.toLocaleString('pt-BR')}
+              {metrics.inicioContatos || 0}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              +12% vs mês anterior
+              Aguardando conversão
             </p>
           </CardContent>
         </Card>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,21 +42,49 @@ export const ProfessionalsManagement = ({ professionals, onUpdateProfessionals, 
       }
 
       const file = event.target.files[0];
+      
+      // Validar tipo e tamanho do arquivo
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Erro no upload",
+          description: "Por favor, selecione apenas arquivos de imagem.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) { // 5MB
+        toast({
+          title: "Erro no upload",
+          description: "O arquivo deve ter menos de 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const fileExt = file.name.split('.').pop();
-      const fileName = `new-professional-${Date.now()}.${fileExt}`;
+      const fileName = `professional-${Date.now()}.${fileExt}`;
       const filePath = fileName;
+
+      console.log('Iniciando upload do arquivo:', fileName);
 
       const { error: uploadError } = await supabase.storage
         .from('profile-photos')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
+        console.error('Erro no upload:', uploadError);
         throw uploadError;
       }
 
       const { data } = supabase.storage
         .from('profile-photos')
         .getPublicUrl(filePath);
+
+      console.log('URL da foto gerada:', data.publicUrl);
 
       setNewProfessional(prev => ({ ...prev, avatar: data.publicUrl }));
       
@@ -77,14 +104,16 @@ export const ProfessionalsManagement = ({ professionals, onUpdateProfessionals, 
     }
   };
 
-  const handleAddProfessional = (e: React.FormEvent) => {
+  const handleAddProfessional = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Adicionando profissional com avatar:', newProfessional.avatar);
+    
     const professional = {
       ...newProfessional,
       specialties: newProfessional.specialties.split(',').map(s => s.trim()).filter(s => s)
     };
     
-    onAddProfessional(professional);
+    await onAddProfessional(professional);
     setNewProfessional({
       name: '',
       email: '',

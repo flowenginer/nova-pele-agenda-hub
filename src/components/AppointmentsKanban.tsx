@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';  
 import { Appointment } from '../types/crm';
-import { Calendar, User, Clock, Phone } from 'lucide-react';
+import { Calendar, User, Clock, Phone, Mail, MapPin, Calendar as CalendarIcon } from 'lucide-react';
 
 interface AppointmentsKanbanProps {
   appointments: Appointment[];
@@ -31,6 +32,8 @@ const statusColors = {
 };
 
 export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppClick }: AppointmentsKanbanProps) => {
+  const [draggedItem, setDraggedItem] = useState<string | null>(null);
+
   const getAppointmentsByStatus = (status: string) => {
     return appointments.filter(appointment => appointment.status === status);
   };
@@ -41,6 +44,28 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
       const whatsappUrl = `https://wa.me/${appointment.client.whatsapp}?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, '_blank');
     }
+  };
+
+  const handleDragStart = (e: React.DragEvent, appointmentId: string) => {
+    setDraggedItem(appointmentId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, newStatus: string) => {
+    e.preventDefault();
+    if (draggedItem && draggedItem !== newStatus) {
+      onStatusChange(draggedItem, newStatus as Appointment['status']);
+    }
+    setDraggedItem(null);
   };
 
   return (
@@ -58,7 +83,12 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
         {statusColumns.map(column => {
           const columnAppointments = getAppointmentsByStatus(column.id);
           return (
-            <div key={column.id} className={`rounded-lg border-2 ${column.color} flex flex-col h-full`}>
+            <div 
+              key={column.id} 
+              className={`rounded-lg border-2 ${column.color} flex flex-col h-full`}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, column.id)}
+            >
               <div className="flex items-center justify-between p-4 flex-shrink-0 border-b border-current border-opacity-20">
                 <h3 className="font-semibold text-gray-800">{column.title}</h3>
                 <Badge variant="secondary" className="text-xs">
@@ -69,50 +99,134 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-3">
                   {columnAppointments.map(appointment => (
-                    <Card key={appointment.id} className="bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                      <CardContent className="p-4">
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-medium text-gray-800 truncate">
-                              {appointment.professional?.name || 'Profissional não encontrado'}
-                            </h4>
-                            <Badge 
-                              className={`text-xs cursor-pointer transition-colors ${statusColors[appointment.status]}`}
-                              onClick={() => {
-                                const nextStatus = getNextStatus(appointment.status);
-                                if (nextStatus) onStatusChange(appointment.id, nextStatus);
-                              }}
-                            >
-                              {column.title}
-                            </Badge>
-                          </div>
-                          
-                          <div className="space-y-2 text-sm text-gray-600">
-                            <div className="flex items-center space-x-2">
-                              <Calendar className="w-4 h-4" />
-                              <span>{new Date(appointment.date).toLocaleDateString('pt-BR')} - {appointment.time}</span>
+                    <Dialog key={appointment.id}>
+                      <DialogTrigger asChild>
+                        <Card 
+                          className="bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, appointment.id)}
+                          onDragEnd={handleDragEnd}
+                        >
+                          <CardContent className="p-4">
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <h4 className="font-medium text-gray-800 truncate">
+                                  {appointment.professional?.name || 'Profissional não encontrado'}
+                                </h4>
+                                <Badge 
+                                  className={`text-xs cursor-pointer transition-colors ${statusColors[appointment.status]}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const nextStatus = getNextStatus(appointment.status);
+                                    if (nextStatus) onStatusChange(appointment.id, nextStatus);
+                                  }}
+                                >
+                                  {column.title}
+                                </Badge>
+                              </div>
+                              
+                              <div className="space-y-2 text-sm text-gray-600">
+                                <div className="flex items-center space-x-2">
+                                  <Calendar className="w-4 h-4" />
+                                  <span>{new Date(appointment.date).toLocaleDateString('pt-BR')} - {appointment.time}</span>
+                                </div>
+                                
+                                <div className="flex items-center space-x-2">
+                                  <Clock className="w-4 h-4" />
+                                  <span className="truncate">{appointment.service?.name}</span>
+                                </div>
+                              </div>
+
+                              {appointment.client?.whatsapp && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-full text-green-600 border-green-200 hover:bg-green-50"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleWhatsAppClick(appointment);
+                                  }}
+                                >
+                                  <Phone className="w-4 h-4 mr-2" />
+                                  WhatsApp
+                                </Button>
+                              )}
                             </div>
-                            
-                            <div className="flex items-center space-x-2">
-                              <Clock className="w-4 h-4" />
-                              <span className="truncate">{appointment.service?.name}</span>
+                          </CardContent>
+                        </Card>
+                      </DialogTrigger>
+                      
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Informações do Cliente</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="flex items-center space-x-3">
+                            <User className="w-5 h-5 text-gray-500" />
+                            <div>
+                              <p className="font-medium">{appointment.client?.name}</p>
+                              <p className="text-sm text-gray-500">Cliente</p>
                             </div>
                           </div>
 
-                          {appointment.client?.whatsapp && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="w-full text-green-600 border-green-200 hover:bg-green-50"
-                              onClick={() => handleWhatsAppClick(appointment)}
-                            >
-                              <Phone className="w-4 h-4 mr-2" />
-                              WhatsApp
-                            </Button>
+                          <div className="flex items-center space-x-3">
+                            <Phone className="w-5 h-5 text-gray-500" />
+                            <div>
+                              <p className="font-medium">{appointment.client?.phone}</p>
+                              <p className="text-sm text-gray-500">Telefone</p>
+                            </div>
+                          </div>
+
+                          {appointment.client?.email && (
+                            <div className="flex items-center space-x-3">
+                              <Mail className="w-5 h-5 text-gray-500" />
+                              <div>
+                                <p className="font-medium">{appointment.client.email}</p>
+                                <p className="text-sm text-gray-500">E-mail</p>
+                              </div>
+                            </div>
                           )}
+
+                          {appointment.client?.address && (
+                            <div className="flex items-center space-x-3">
+                              <MapPin className="w-5 h-5 text-gray-500" />
+                              <div>
+                                <p className="font-medium">{appointment.client.address}</p>
+                                <p className="text-sm text-gray-500">Endereço</p>
+                              </div>
+                            </div>
+                          )}
+
+                          {appointment.client?.birthDate && (
+                            <div className="flex items-center space-x-3">
+                              <CalendarIcon className="w-5 h-5 text-gray-500" />
+                              <div>
+                                <p className="font-medium">{new Date(appointment.client.birthDate).toLocaleDateString('pt-BR')}</p>
+                                <p className="text-sm text-gray-500">Data de Nascimento</p>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="pt-2 border-t">
+                            <h4 className="font-medium mb-2">Agendamento</h4>
+                            <p className="text-sm text-gray-600">
+                              <strong>Serviço:</strong> {appointment.service?.name}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              <strong>Profissional:</strong> {appointment.professional?.name}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              <strong>Data:</strong> {new Date(appointment.date).toLocaleDateString('pt-BR')} às {appointment.time}
+                            </p>
+                            {appointment.value && (
+                              <p className="text-sm text-gray-600">
+                                <strong>Valor:</strong> R$ {appointment.value.toFixed(2)}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </DialogContent>
+                    </Dialog>
                   ))}
                   
                   {columnAppointments.length === 0 && (

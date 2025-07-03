@@ -8,6 +8,7 @@ import { Dashboard } from '@/components/Dashboard';
 import { AppointmentsKanban } from '@/components/AppointmentsKanban';
 import { ClientsManagement } from '@/components/ClientsManagement';
 import { ProfessionalsManagement } from '@/components/ProfessionalsManagement';
+import { Revenue } from '@/components/Revenue';
 import { Communication } from '@/components/Communication';
 import { Settings } from '@/components/Settings';
 import { Button } from '@/components/ui/button';
@@ -229,6 +230,14 @@ const Index = () => {
             }))}
             onUpdateProfessionals={handleUpdateProfessionals}
             onAddProfessional={handleAddProfessional}
+          />
+        );
+      case 'revenue':
+        return (
+          <Revenue
+            appointments={crmData.appointments}
+            services={crmData.services}
+            metrics={crmData.dashboardMetrics}
           />
         );
       case 'communication':

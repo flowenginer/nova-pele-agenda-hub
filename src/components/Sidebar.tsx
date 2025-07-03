@@ -1,13 +1,15 @@
 
 import React from 'react';
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { 
+  LayoutDashboard, 
   Calendar, 
   Users, 
-  User, 
-  Settings, 
-  Kanban,
-  Bell
+  UserCog, 
+  MessageCircle, 
+  Settings,
+  TrendingUp
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -15,52 +17,53 @@ interface SidebarProps {
   onSectionChange: (section: string) => void;
 }
 
-const navigation = [
-  { id: 'dashboard', name: 'Dashboard', icon: Kanban },
-  { id: 'appointments', name: 'Agendamentos', icon: Calendar },
-  { id: 'clients', name: 'Clientes', icon: Users },
-  { id: 'professionals', name: 'Profissionais', icon: User },
-  { id: 'communication', name: 'Comunicação', icon: Bell },
-  { id: 'settings', name: 'Configurações', icon: Settings },
+const menuItems = [
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'appointments', label: 'Agendamentos', icon: Calendar },
+  { id: 'clients', label: 'Clientes', icon: Users },
+  { id: 'professionals', label: 'Profissionais', icon: UserCog },
+  { id: 'revenue', label: 'Receita', icon: TrendingUp },
+  { id: 'communication', label: 'Comunicação', icon: MessageCircle },
+  { id: 'settings', label: 'Configurações', icon: Settings },
 ];
 
 export const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
   return (
-    <div className="w-64 bg-white/80 backdrop-blur-sm border-r border-white/20 shadow-lg">
-      <div className="p-6 border-b border-white/20">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-nova-pink-500 to-nova-purple-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">N</span>
+    <div className="w-64 bg-white/80 backdrop-blur-sm border-r border-white/20 shadow-sm">
+      <div className="p-6">
+        <div className="flex items-center space-x-3 mb-8">
+          <div className="w-10 h-10 bg-gradient-to-br from-nova-pink-500 to-nova-purple-500 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-lg">NP</span>
           </div>
           <div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-nova-pink-600 to-nova-purple-600 bg-clip-text text-transparent">
-              Nova Pele
-            </h1>
-            <p className="text-sm text-gray-600">CRM Estética</p>
+            <h1 className="font-bold text-gray-800">Nova Pele</h1>
+            <p className="text-sm text-gray-600">Estética</p>
           </div>
         </div>
+
+        <nav className="space-y-2">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Card
+                key={item.id}
+                className={cn(
+                  "p-3 cursor-pointer transition-all duration-200 hover:shadow-md border-0",
+                  activeSection === item.id
+                    ? "bg-gradient-to-r from-nova-pink-500 to-nova-purple-500 text-white shadow-lg"
+                    : "bg-white/50 hover:bg-white/80 text-gray-700"
+                )}
+                onClick={() => onSectionChange(item.id)}
+              >
+                <div className="flex items-center space-x-3">
+                  <Icon className="w-5 h-5" />
+                  <span className="font-medium">{item.label}</span>
+                </div>
+              </Card>
+            );
+          })}
+        </nav>
       </div>
-      
-      <nav className="p-4 space-y-2">
-        {navigation.map((item) => {
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.id}
-              onClick={() => onSectionChange(item.id)}
-              className={cn(
-                "w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200",
-                activeSection === item.id
-                  ? "bg-gradient-to-r from-nova-pink-500 to-nova-purple-500 text-white shadow-lg transform scale-105"
-                  : "text-gray-700 hover:bg-white/50 hover:text-nova-pink-600"
-              )}
-            >
-              <Icon className="w-5 h-5" />
-              <span className="font-medium">{item.name}</span>
-            </button>
-          );
-        })}
-      </nav>
     </div>
   );
 };
