@@ -3,11 +3,25 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { DatabaseClient, DatabaseProfessional, DatabaseService, DatabaseAppointment, SystemSettings } from '../types/supabase';
 
+interface DatabaseInicioContato {
+  id: string;
+  nome: string;
+  telefone: string;
+  whatsapp?: string;
+  email?: string;
+  mensagem?: string;
+  status: 'pendente' | 'convertido';
+  data_contato: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export const useSupabaseCRM = () => {
   const [clients, setClients] = useState<DatabaseClient[]>([]);
   const [professionals, setProfessionals] = useState<DatabaseProfessional[]>([]);
   const [services, setServices] = useState<DatabaseService[]>([]);
   const [appointments, setAppointments] = useState<DatabaseAppointment[]>([]);
+  const [inicioContatos, setInicioContatos] = useState<DatabaseInicioContato[]>([]);
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -99,6 +113,15 @@ export const useSupabaseCRM = () => {
 
       if (appointmentsError) throw appointmentsError;
       setAppointments((appointmentsData || []) as DatabaseAppointment[]);
+
+      // Fetch inicio contatos
+      const { data: inicioContatosData, error: inicioContatosError } = await supabase
+        .from('iniciou_contato')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (inicioContatosError) throw inicioContatosError;
+      setInicioContatos((inicioContatosData || []) as DatabaseInicioContato[]);
 
       // Sincronizar clientes dos agendamentos apenas se necessário
       if (appointmentsData && appointmentsData.length > 0) {
@@ -218,6 +241,12 @@ export const useSupabaseCRM = () => {
             status: 'cliente'
           });
         }
+
+        // Marcar como convertido no inicio_contato se existir
+        const inicioContato = inicioContatos.find(ic => ic.telefone === appointmentData.cliente_telefone && ic.status === 'pendente');
+        if (inicioContato) {
+          await updateInicioContatoStatus(inicioContato.id, 'convertido');
+        }
       }
 
       toast({
@@ -260,6 +289,26 @@ export const useSupabaseCRM = () => {
         description: "Não foi possível atualizar o status.",
         variant: "destructive",
       });
+      throw error;
+    }
+  };
+
+  // Inicio Contato operations
+  const updateInicioContatoStatus = async (id: string, status: 'pendente' | 'convertido') => {
+    try {
+      const { data, error } = await supabase
+        .from('iniciou_contato')
+        .update({ status })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setInicioContatos(prev => prev.map(ic => ic.id === id ? data as DatabaseInicioContato : ic));
+      return data;
+    } catch (error) {
+      console.error('Error updating inicio contato status:', error);
       throw error;
     }
   };
@@ -402,7 +451,8 @@ export const useSupabaseCRM = () => {
         acc[professional.nome] = (acc[professional.nome] || 0) + 1;
       }
       return acc;
-    }, {} as Record<string, number>)
+    }, {} as Record<string, number>),
+    inicioContatos: inicioContatos.filter(ic => ic.status === 'pendente').length
   };
 
   return {
@@ -410,6 +460,7 @@ export const useSupabaseCRM = () => {
     professionals,
     services,
     appointments,
+    inicioContatos,
     settings,
     dashboardMetrics,
     loading,
@@ -421,6 +472,7 @@ export const useSupabaseCRM = () => {
     updateProfessional,
     addService,
     updateSettings,
+    updateInicioContatoStatus,
     refetch: fetchAllData
   };
 };

@@ -49,7 +49,7 @@ export interface Appointment {
   service?: Service;
   date: string;
   time: string;
-  status: 'agendado' | 'confirmado' | 'em_atendimento' | 'concluido' | 'cancelado' | 'nao_compareceu';
+  status: 'inicio_contato' | 'agendado' | 'confirmado' | 'em_atendimento' | 'concluido' | 'cancelado' | 'nao_compareceu';
   notes?: string;
   value?: number;
   createdAt: string;
@@ -64,6 +64,7 @@ export interface DashboardMetrics {
   appointmentsByStatus: Record<string, number>;
   appointmentsByService: Record<string, number>;
   appointmentsByProfessional: Record<string, number>;
+  inicioContatos?: number;
 }
 
 export interface CommunicationTemplate {
@@ -85,4 +86,17 @@ export interface SystemSettings {
   appointmentDuration: number;
   notificationsEnabled: boolean;
   whatsappIntegration: boolean;
+}
+
+export interface InicioContato {
+  id: string;
+  nome: string;
+  telefone: string;
+  whatsapp?: string;
+  email?: string;
+  mensagem?: string;
+  status: 'pendente' | 'convertido';
+  data_contato: string;
+  created_at: string;
+  updated_at: string;
 }

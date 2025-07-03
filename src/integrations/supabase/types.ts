@@ -187,6 +187,45 @@ export type Database = {
         }
         Relationships: []
       }
+      iniciou_contato: {
+        Row: {
+          created_at: string | null
+          data_contato: string | null
+          email: string | null
+          id: string
+          mensagem: string | null
+          nome: string
+          status: string | null
+          telefone: string
+          updated_at: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_contato?: string | null
+          email?: string | null
+          id?: string
+          mensagem?: string | null
+          nome: string
+          status?: string | null
+          telefone: string
+          updated_at?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_contato?: string | null
+          email?: string | null
+          id?: string
+          mensagem?: string | null
+          nome?: string
+          status?: string | null
+          telefone?: string
+          updated_at?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       profissionais: {
         Row: {
           ativo: boolean | null

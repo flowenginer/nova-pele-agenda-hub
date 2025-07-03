@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabaseCRM } from '@/hooks/useSupabaseCRM';
@@ -76,54 +77,105 @@ const Index = () => {
       case 'dashboard':
         return <Dashboard metrics={crmData.dashboardMetrics} />;
       case 'appointments':
-        return (
-          <AppointmentsKanban
-            appointments={crmData.appointments.map(apt => ({
-              id: apt.id.toString(),
-              clientId: apt.cliente_id || apt.id.toString(),
-              professionalId: apt.profissional_id.toString(),
-              serviceId: apt.servico_id.toString(),
-              client: {
-                id: apt.cliente_id || apt.id.toString(),
-                name: apt.cliente_nome,
-                phone: apt.cliente_telefone,
-                whatsapp: apt.cliente_telefone,
-                email: apt.email || '',
-                status: 'cliente' as any,
-                createdAt: apt.created_at,
-                updatedAt: apt.updated_at || apt.created_at
-              },
-              professional: {
-                id: apt.profissional_id.toString(),
-                name: crmData.professionals.find(p => p.id === apt.profissional_id)?.nome || 'N/A',
-                email: crmData.professionals.find(p => p.id === apt.profissional_id)?.email || '',
-                phone: crmData.professionals.find(p => p.id === apt.profissional_id)?.telefone || '',
-                specialties: crmData.professionals.find(p => p.id === apt.profissional_id)?.especialidades || [],
-                workingHours: {
-                  start: crmData.professionals.find(p => p.id === apt.profissional_id)?.horario_inicio || '08:00',
-                  end: crmData.professionals.find(p => p.id === apt.profissional_id)?.horario_fim || '18:00'
-                },
-                workingDays: crmData.professionals.find(p => p.id === apt.profissional_id)?.dias_trabalho || [1, 2, 3, 4, 5],
-                isActive: crmData.professionals.find(p => p.id === apt.profissional_id)?.ativo !== false,
-                avatar: crmData.professionals.find(p => p.id === apt.profissional_id)?.photo_url
-              },
-              service: {
-                id: apt.servico_id.toString(),
-                name: crmData.services.find(s => s.id === apt.servico_id)?.nome || 'N/A',
-                description: crmData.services.find(s => s.id === apt.servico_id)?.descricao || '',
-                duration: crmData.services.find(s => s.id === apt.servico_id)?.duracao_minutos || 60,
-                price: crmData.services.find(s => s.id === apt.servico_id)?.preco || 0,
-                category: crmData.services.find(s => s.id === apt.servico_id)?.categoria || '',
-                isActive: crmData.services.find(s => s.id === apt.servico_id)?.ativo !== false,
-                professionals: []
-              },
-              date: apt.data_agendamento,
-              time: apt.hora_agendamento,
-              status: apt.status as any,
-              value: apt.valor || 0,
+        // Combinando agendamentos normais com inicio_contato
+        const allAppointments = [
+          // Agendamentos normais
+          ...crmData.appointments.map(apt => ({
+            id: apt.id.toString(),
+            clientId: apt.cliente_id || apt.id.toString(),
+            professionalId: apt.profissional_id.toString(),
+            serviceId: apt.servico_id.toString(),
+            client: {
+              id: apt.cliente_id || apt.id.toString(),
+              name: apt.cliente_nome,
+              phone: apt.cliente_telefone,
+              whatsapp: apt.cliente_telefone,
+              email: apt.email || '',
+              status: 'cliente' as any,
               createdAt: apt.created_at,
               updatedAt: apt.updated_at || apt.created_at
-            }))}
+            },
+            professional: {
+              id: apt.profissional_id.toString(),
+              name: crmData.professionals.find(p => p.id === apt.profissional_id)?.nome || 'N/A',
+              email: crmData.professionals.find(p => p.id === apt.profissional_id)?.email || '',
+              phone: crmData.professionals.find(p => p.id === apt.profissional_id)?.telefone || '',
+              specialties: crmData.professionals.find(p => p.id === apt.profissional_id)?.especialidades || [],
+              workingHours: {
+                start: crmData.professionals.find(p => p.id === apt.profissional_id)?.horario_inicio || '08:00',
+                end: crmData.professionals.find(p => p.id === apt.profissional_id)?.horario_fim || '18:00'
+              },
+              workingDays: crmData.professionals.find(p => p.id === apt.profissional_id)?.dias_trabalho || [1, 2, 3, 4, 5],
+              isActive: crmData.professionals.find(p => p.id === apt.profissional_id)?.ativo !== false,
+              avatar: crmData.professionals.find(p => p.id === apt.profissional_id)?.photo_url
+            },
+            service: {
+              id: apt.servico_id.toString(),
+              name: crmData.services.find(s => s.id === apt.servico_id)?.nome || 'N/A',
+              description: crmData.services.find(s => s.id === apt.servico_id)?.descricao || '',
+              duration: crmData.services.find(s => s.id === apt.servico_id)?.duracao_minutos || 60,
+              price: crmData.services.find(s => s.id === apt.servico_id)?.preco || 0,
+              category: crmData.services.find(s => s.id === apt.servico_id)?.categoria || '',
+              isActive: crmData.services.find(s => s.id === apt.servico_id)?.ativo !== false,
+              professionals: []
+            },
+            date: apt.data_agendamento,
+            time: apt.hora_agendamento,
+            status: apt.status as any,
+            value: apt.valor || 0,
+            createdAt: apt.created_at,
+            updatedAt: apt.updated_at || apt.created_at
+          })),
+          // Contatos de início que ainda não foram convertidos
+          ...crmData.inicioContatos
+            .filter(ic => ic.status === 'pendente')
+            .map(ic => ({
+              id: `inicio_${ic.id}`,
+              clientId: ic.id,
+              professionalId: '0',
+              serviceId: '0',
+              client: {
+                id: ic.id,
+                name: ic.nome,
+                phone: ic.telefone,
+                whatsapp: ic.whatsapp || ic.telefone,
+                email: ic.email || '',
+                status: 'lead' as any,
+                createdAt: ic.created_at,
+                updatedAt: ic.updated_at
+              },
+              professional: {
+                id: '0',
+                name: 'A definir',
+                email: '',
+                phone: '',
+                specialties: [],
+                workingHours: { start: '08:00', end: '18:00' },
+                workingDays: [1, 2, 3, 4, 5],
+                isActive: true
+              },
+              service: {
+                id: '0',
+                name: 'A definir',
+                description: '',
+                duration: 60,
+                price: 0,
+                category: '',
+                isActive: true,
+                professionals: []
+              },
+              date: ic.data_contato.split('T')[0],
+              time: new Date(ic.data_contato).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+              status: 'inicio_contato' as any,
+              value: 0,
+              createdAt: ic.created_at,
+              updatedAt: ic.updated_at
+            }))
+        ];
+
+        return (
+          <AppointmentsKanban
+            appointments={allAppointments}
             onStatusChange={handleStatusChange}
             onWhatsAppClick={handleWhatsAppClick}
           />
