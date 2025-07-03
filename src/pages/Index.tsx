@@ -11,6 +11,7 @@ import { ProfessionalsManagement } from '@/components/ProfessionalsManagement';
 import { Revenue } from '@/components/Revenue';
 import { Communication } from '@/components/Communication';
 import { Settings } from '@/components/Settings';
+import { AppointmentConsult } from '@/components/AppointmentConsult';
 import { Button } from '@/components/ui/button';
 import { LogOut, Loader2 } from 'lucide-react';
 
@@ -254,6 +255,8 @@ const Index = () => {
           createdAt: client.created_at,
           updatedAt: client.updated_at
         }))} />;
+      case 'consult':
+        return <AppointmentConsult />;
       case 'settings':
         return <Settings settings={crmData.settings} updateSettings={crmData.updateSettings} />;
       default:
