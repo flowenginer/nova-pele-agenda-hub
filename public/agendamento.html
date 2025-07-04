@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -11,7 +10,15 @@
         const supabaseUrl = 'https://flvkbiwftlonwlzextmx.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsdmtiaXdmdGxvbndsemV4dG14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkyNDMyNzQsImV4cCI6MjA2NDgxOTI3NH0.owDvN4PQX9MAX2OHlbBgupsF7W5Whom7v4qDqDwzFj4';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-        window.supabaseClient = supabaseClient;
+        
+        // Capturar USER ID da URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const USER_ID = urlParams.get('user');
+        
+        if (!USER_ID) {
+            alert('Link inválido. Entre em contato com o estabelecimento.');
+            window.location.href = '/';
+        }
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -93,7 +100,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 font-sans text-gray-800">
+<body class="bg-gray-50 font-sans text-secondary-800">
     <div class="max-w-lg mx-auto bg-white min-h-screen shadow-sm">
         <!-- Header -->
         <header class="relative">
@@ -400,6 +407,7 @@
                 const { data, error } = await supabaseClient
                     .from('servicos')
                     .select('*')
+                    .eq('user_id', USER_ID)
                     .eq('ativo', true)
                     .order('nome');
                 
@@ -450,18 +458,19 @@
                 } else {
                     servicesContainer.innerHTML = '<p class="text-center text-gray-500 py-8">Nenhum serviço disponível no momento.</p>';
                 }
-            } catch (error) {
-                console.error('Erro ao carregar serviços:', error);
+            } catch (err) {
+                console.error('Erro ao carregar serviços:', err);
                 servicesContainer.innerHTML = '<p class="text-center text-red-500 py-8">Erro ao carregar serviços.</p>';
             }
         }
 
         // Carregar profissionais
-        async function loadProfessionals() {
+        async function loadBarbers() {
             try {
                 const { data, error } = await supabaseClient
                     .from('profissionais')
                     .select('*')
+                    .eq('user_id', USER_ID)
                     .eq('ativo', true)
                     .order('nome');
                 
@@ -507,8 +516,8 @@
                 } else {
                     professionalsContainer.innerHTML = '<p class="text-center text-gray-500 py-8">Nenhum profissional disponível no momento.</p>';
                 }
-            } catch (error) {
-                console.error('Erro ao carregar profissionais:', error);
+            } catch (err) {
+                console.error('Erro ao carregar profissionais:', err);
                 professionalsContainer.innerHTML = '<p class="text-center text-red-500 py-8">Erro ao carregar profissionais.</p>';
             }
         }
@@ -578,15 +587,12 @@
                 `${appointmentData.day_name}, ${appointmentData.date_formatted} - ${appointmentData.professional_name}`;
                 
             try {
-                const times = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
-                
-                // Verificar agendamentos existentes
-                const { data: bookedTimes, error } = await supabaseClient
-                    .from('agendamentos')
-                    .select('hora_agendamento')
-                    .eq('data_agendamento', appointmentData.date)
-                    .eq('profissional_id', appointmentData.professional_id)
-                    .neq('status', 'cancelado');
+                let query = supabaseClient.from('agendamentos').select('hora_agendamento')
+                    .eq('data_agendamento', appointmentData.data_agendamento)
+                    .eq('user_id', USER_ID)
+                    .eq('status', 'confirmado');
+                    
+                const { data: bookedTimes, error } = await query;
                 
                 if (error) throw error;
                 
@@ -616,8 +622,8 @@
                     timesContainer.appendChild(timeElement);
                 });
                 
-            } catch (error) {
-                console.error('Erro ao carregar horários:', error);
+            } catch (err) {
+                console.error('Erro ao carregar horários:', err);
                 timesContainer.innerHTML = '<p class="text-center text-red-500 py-8 col-span-3">Erro ao carregar horários.</p>';
             }
         }
@@ -643,7 +649,7 @@
         // Event listeners para navegação
         nextButtons.step1.addEventListener('click', () => {
             showStep(2);
-            loadProfessionals();
+            loadBarbers();
         });
         
         nextButtons.step2.addEventListener('click', () => {
@@ -710,11 +716,12 @@
                     .from('agendamentos')
                     .insert([
                         {
+                            user_id: USER_ID,
                             cliente_nome: appointmentData.client_name,
                             cliente_telefone: appointmentData.client_phone.replace(/\D/g, ''),
-                            email: appointmentData.client_email || null,
+                            email: appointmentData.client_email,
                             servico_id: appointmentData.service_id,
-                            profissional_id: appointmentData.professional_id,
+                            profissional_id: appointmentData.professional_id === '0' ? null : appointmentData.professional_id,
                             data_agendamento: appointmentData.date,
                             hora_agendamento: appointmentData.time,
                             status: 'confirmado'
@@ -731,8 +738,8 @@
                 
                 showStep(6);
                 
-            } catch (error) {
-                console.error('Erro ao criar agendamento:', error);
+            } catch (err) {
+                console.error('Erro ao criar agendamento:', err);
                 alert('Erro ao criar agendamento. Por favor, tente novamente.');
                 
                 // Esconder loading

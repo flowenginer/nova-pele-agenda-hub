@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabaseCRM } from '@/hooks/useSupabaseCRM';
@@ -14,6 +13,7 @@ import { Settings } from '@/components/Settings';
 import { AppointmentConsult } from '@/components/AppointmentConsult';
 import { Button } from '@/components/ui/button';
 import { LogOut, Loader2 } from 'lucide-react';
+import { PublicLinks } from '@/components/PublicLinks';
 
 const Index = () => {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -257,6 +257,8 @@ const Index = () => {
         }))} />;
       case 'consult':
         return <AppointmentConsult />;
+      case 'public-links':
+        return <PublicLinks />;
       case 'settings':
         return <Settings settings={crmData.settings} updateSettings={crmData.updateSettings} />;
       default:
