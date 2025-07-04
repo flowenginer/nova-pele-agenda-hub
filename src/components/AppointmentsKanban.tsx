@@ -99,7 +99,7 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
               <div className="flex-1 overflow-hidden">
                 <ScrollArea className="h-full">
                   <div className="p-4 space-y-3">
-                    {columnAppointments.slice(0, 3).map(appointment => (
+                    {columnAppointments.map(appointment => (
                       <Dialog key={appointment.id}>
                         <DialogTrigger asChild>
                           <Card 
@@ -229,14 +229,6 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
                         </DialogContent>
                       </Dialog>
                     ))}
-                    
-                    {columnAppointments.length > 3 && (
-                      <div className="text-center py-2">
-                        <Badge variant="outline" className="text-xs">
-                          +{columnAppointments.length - 3} mais
-                        </Badge>
-                      </div>
-                    )}
                     
                     {columnAppointments.length === 0 && (
                       <div className="text-center py-8 text-gray-400">

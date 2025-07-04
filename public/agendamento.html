@@ -196,15 +196,19 @@
 
         async function loadServices() {
             try {
+                console.log('Carregando serviços para USER_ID:', USER_ID);
                 const { data, error } = await supabaseClient
                     .from('servicos')
                     .select('*')
-                    .eq('user_id', USER_ID)
                     .eq('ativo', true)
                     .order('nome');
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Erro ao carregar serviços:', error);
+                    throw error;
+                }
 
+                console.log('Serviços carregados:', data);
                 servicesContainer.innerHTML = '';
                 
                 if (data && data.length > 0) {
@@ -252,15 +256,19 @@
 
         async function loadProfessionals() {
             try {
+                console.log('Carregando profissionais...');
                 const { data, error } = await supabaseClient
                     .from('profissionais')
                     .select('*')
-                    .eq('user_id', USER_ID)
                     .eq('ativo', true)
                     .order('nome');
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Erro ao carregar profissionais:', error);
+                    throw error;
+                }
 
+                console.log('Profissionais carregados:', data);
                 professionalsContainer.innerHTML = '';
                 
                 if (data && data.length > 0) {
@@ -271,11 +279,14 @@
                         professionalDiv.innerHTML = `
                             <div class="flex items-center">
                                 <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mr-3">
-                                    <i class="fas fa-user text-pink-600"></i>
+                                    ${professional.photo_url ? 
+                                        `<img src="${professional.photo_url}" alt="${professional.nome}" class="w-full h-full rounded-full object-cover">` :
+                                        `<i class="fas fa-user text-pink-600"></i>`
+                                    }
                                 </div>
                                 <div>
                                     <h3 class="font-semibold text-gray-800">${professional.nome}</h3>
-                                    <p class="text-sm text-gray-600">${(professional.especialidades || []).join(', ') || 'Esteticista'}</p>
+                                    <p class="text-sm text-gray-600">${(professional.especialidades || [professional.especialidade] || ['Esteticista']).filter(Boolean).join(', ')}</p>
                                 </div>
                             </div>
                         `;
@@ -309,8 +320,11 @@
                 const date = new Date();
                 date.setDate(today.getDate() + i);
                 
-                // Pular domingos
-                if (date.getDay() === 0) continue;
+                // Verificar se o profissional trabalha neste dia da semana
+                const dayOfWeek = date.getDay();
+                const workingDays = selectedProfessional.dias_trabalho || [1, 2, 3, 4, 5];
+                
+                if (!workingDays.includes(dayOfWeek)) continue;
                 
                 const dateDiv = document.createElement('div');
                 dateDiv.className = 'date-item p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-pink-300 transition text-center';
@@ -343,24 +357,32 @@
             timesContainer.innerHTML = '<div class="col-span-3 text-center">Carregando horários...</div>';
             
             try {
+                console.log('Carregando horários para:', selectedDate, selectedProfessional.id);
                 // Buscar horários ocupados
                 const { data: bookedTimes, error } = await supabaseClient
                     .from('agendamentos')
                     .select('hora_agendamento')
                     .eq('data_agendamento', selectedDate)
                     .eq('profissional_id', selectedProfessional.id)
-                    .eq('user_id', USER_ID)
                     .in('status', ['confirmado', 'agendado']);
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Erro ao carregar horários ocupados:', error);
+                    throw error;
+                }
 
+                console.log('Horários ocupados:', bookedTimes);
                 const bookedHours = bookedTimes.map(item => item.hora_agendamento);
                 const availableTimes = [];
                 
-                // Gerar horários das 8h às 18h de 30 em 30 minutos
-                for (let hour = 8; hour <= 18; hour++) {
+                // Usar horários do profissional
+                const startHour = parseInt(selectedProfessional.horario_inicio?.split(':')[0] || '8');
+                const endHour = parseInt(selectedProfessional.horario_fim?.split(':')[0] || '18');
+                
+                // Gerar horários de 30 em 30 minutos
+                for (let hour = startHour; hour <= endHour; hour++) {
                     for (let minute = 0; minute < 60; minute += 30) {
-                        if (hour === 18 && minute > 0) break; // Não passar das 18h
+                        if (hour === endHour && minute > 0) break; // Não passar do horário final
                         
                         const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
                         
@@ -472,6 +494,19 @@
             const clientEmail = document.getElementById('client-email').value;
 
             try {
+                console.log('Criando agendamento:', {
+                    user_id: parseInt(USER_ID),
+                    servico_id: selectedService.id,
+                    profissional_id: selectedProfessional.id,
+                    data_agendamento: selectedDate,
+                    hora_agendamento: selectedTime,
+                    cliente_nome: clientName,
+                    cliente_telefone: clientPhone,
+                    email: clientEmail,
+                    status: 'confirmado',
+                    valor: selectedService.preco
+                });
+
                 const { data, error } = await supabaseClient
                     .from('agendamentos')
                     .insert({
@@ -483,10 +518,16 @@
                         cliente_nome: clientName,
                         cliente_telefone: clientPhone,
                         email: clientEmail,
-                        status: 'confirmado'
+                        status: 'confirmado',
+                        valor: selectedService.preco
                     });
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Erro ao criar agendamento:', error);
+                    throw error;
+                }
+
+                console.log('Agendamento criado com sucesso:', data);
 
                 // Mostrar confirmação
                 stepClient.classList.add('hidden');
@@ -501,6 +542,7 @@
                         <p><strong>Horário:</strong> ${selectedTime}</p>
                         <p><strong>Cliente:</strong> ${clientName}</p>
                         <p><strong>Telefone:</strong> ${document.getElementById('client-phone').value}</p>
+                        <p><strong>Valor:</strong> R$ ${(selectedService.preco || 0).toFixed(2)}</p>
                     </div>
                 `;
 
