@@ -10,7 +10,6 @@ import { ProfessionalsManagement } from '@/components/ProfessionalsManagement';
 import { Revenue } from '@/components/Revenue';
 import { Communication } from '@/components/Communication';
 import { Settings } from '@/components/Settings';
-import { AppointmentConsult } from '@/components/AppointmentConsult';
 import { Button } from '@/components/ui/button';
 import { LogOut, Loader2 } from 'lucide-react';
 import { PublicLinks } from '@/components/PublicLinks';
@@ -255,8 +254,6 @@ const Index = () => {
           createdAt: client.created_at,
           updatedAt: client.updated_at
         }))} />;
-      case 'consult':
-        return <AppointmentConsult />;
       case 'public-links':
         return <PublicLinks />;
       case 'settings':

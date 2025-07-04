@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -9,7 +10,6 @@ import {
   MessageCircle, 
   Settings,
   TrendingUp,
-  Search,
   ExternalLink
 } from 'lucide-react';
 
@@ -21,7 +21,6 @@ interface SidebarProps {
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'appointments', label: 'Agendamentos', icon: Calendar },
-  { id: 'consult', label: 'Consultar Agenda', icon: Search },
   { id: 'clients', label: 'Clientes', icon: Users },
   { id: 'professionals', label: 'Profissionais', icon: UserCog },
   { id: 'revenue', label: 'Receita', icon: TrendingUp },
