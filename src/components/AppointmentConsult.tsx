@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,7 +21,7 @@ export const AppointmentConsult = () => {
   const { toast } = useToast();
 
   // Formatação do telefone
-  const formatPhone = (value) => {
+  const formatPhone = (value: string) => {
     const numbers = value.replace(/\D/g, '');
     if (numbers.length <= 11) {
       if (numbers.length > 2) {
@@ -36,7 +35,7 @@ export const AppointmentConsult = () => {
     return numbers.substring(0, 11);
   };
 
-  const handlePhoneChange = (e) => {
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPhone(e.target.value);
     setSearchPhone(formatted);
   };
@@ -78,8 +77,8 @@ export const AppointmentConsult = () => {
       });
 
       setSearchResults(enrichedResults.sort((a, b) => 
-        new Date(b.data_agendamento + 'T' + b.hora_agendamento) - 
-        new Date(a.data_agendamento + 'T' + a.hora_agendamento)
+        new Date(b.data_agendamento + 'T' + b.hora_agendamento).getTime() - 
+        new Date(a.data_agendamento + 'T' + a.hora_agendamento).getTime()
       ));
       
       setIsSearching(false);
@@ -94,17 +93,17 @@ export const AppointmentConsult = () => {
     setHasSearched(false);
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status: string) => {
     const statusConfig = {
-      'confirmado': { label: 'Confirmado', variant: 'default', className: 'bg-green-100 text-green-800' },
-      'agendado': { label: 'Agendado', variant: 'secondary', className: 'bg-blue-100 text-blue-800' },
-      'em_atendimento': { label: 'Em Atendimento', variant: 'default', className: 'bg-yellow-100 text-yellow-800' },
-      'concluido': { label: 'Concluído', variant: 'default', className: 'bg-purple-100 text-purple-800' },
-      'cancelado': { label: 'Cancelado', variant: 'destructive', className: 'bg-red-100 text-red-800' },
-      'nao_compareceu': { label: 'Não Compareceu', variant: 'secondary', className: 'bg-gray-100 text-gray-800' }
+      'confirmado': { label: 'Confirmado', variant: 'default' as const, className: 'bg-green-100 text-green-800' },
+      'agendado': { label: 'Agendado', variant: 'secondary' as const, className: 'bg-blue-100 text-blue-800' },
+      'em_atendimento': { label: 'Em Atendimento', variant: 'default' as const, className: 'bg-yellow-100 text-yellow-800' },
+      'concluido': { label: 'Concluído', variant: 'default' as const, className: 'bg-purple-100 text-purple-800' },
+      'cancelado': { label: 'Cancelado', variant: 'destructive' as const, className: 'bg-red-100 text-red-800' },
+      'nao_compareceu': { label: 'Não Compareceu', variant: 'secondary' as const, className: 'bg-gray-100 text-gray-800' }
     };
 
-    const config = statusConfig[status] || statusConfig['agendado'];
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig['agendado'];
     return (
       <Badge className={config.className}>
         {config.label}
@@ -112,7 +111,7 @@ export const AppointmentConsult = () => {
     );
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString + 'T00:00:00');
     return date.toLocaleDateString('pt-BR', { 
       weekday: 'short', 
@@ -122,12 +121,12 @@ export const AppointmentConsult = () => {
     });
   };
 
-  const handleReschedule = (appointment) => {
+  const handleReschedule = (appointment: any) => {
     setSelectedAppointment(appointment);
     setShowRescheduleModal(true);
   };
 
-  const handleCancel = async (appointment) => {
+  const handleCancel = async (appointment: any) => {
     setSelectedAppointment(appointment);
     setShowCancelModal(true);
   };
@@ -139,7 +138,7 @@ export const AppointmentConsult = () => {
         
         // Atualizar os resultados localmente
         setSearchResults(prev => 
-          prev.map(apt => 
+          prev.map((apt: any) => 
             apt.id === selectedAppointment.id 
               ? { ...apt, status: 'cancelado' }
               : apt
@@ -282,7 +281,7 @@ export const AppointmentConsult = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {searchResults.map((appointment) => (
+                {searchResults.map((appointment: any) => (
                   <div
                     key={appointment.id}
                     className="p-4 border border-gray-200 rounded-lg hover:border-nova-pink-300 transition-colors"

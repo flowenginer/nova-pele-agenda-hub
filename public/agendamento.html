@@ -1,0 +1,751 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova Pele Estética - Agendamento Online</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Inicialização do cliente Supabase
+        const supabaseUrl = 'https://flvkbiwftlonwlzextmx.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsdmtiaXdmdGxvbndsemV4dG14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkyNDMyNzQsImV4cCI6MjA2NDgxOTI3NH0.owDvN4PQX9MAX2OHlbBgupsF7W5Whom7v4qDqDwzFj4';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        window.supabaseClient = supabaseClient;
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            200: '#fbcfe8',
+                            300: '#f9a8d4',
+                            400: '#f472b6',
+                            500: '#ec4899',
+                            600: '#db2777',
+                            700: '#be185d',
+                            800: '#9d174d',
+                            900: '#831843',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .service-selected, .date-selected, .time-selected, .professional-selected {
+            background-color: #ec4899 !important;
+            color: white !important;
+            border-color: #ec4899 !important;
+        }
+        
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ec4899;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        
+        .step {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        
+        .progress-bar {
+            height: 4px;
+            background-color: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: #ec4899;
+            transition: width 0.5s ease;
+        }
+        
+        .scrolling-wrapper {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        
+        .scrolling-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+    <div class="max-w-lg mx-auto bg-white min-h-screen shadow-sm">
+        <!-- Header -->
+        <header class="relative">
+            <div class="p-6 pb-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-20"></div>
+                <div class="relative z-10 flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-14 h-14 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-white shadow-md">
+                            <img src="https://flvkbiwftlonwlzextmx.supabase.co/storage/v1/object/public/profile-photos//ChatGPT%20Image%209%20de%20jun.%20de%202025,%2012_41_57.png" alt="Nova Pele Estética" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold">Nova Pele Estética</h1>
+                            <p class="text-sm opacity-90">Cuidando melhor de você!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="progress-bar mx-6 mb-6">
+                <div class="progress-fill" id="progressBar" style="width: 20%"></div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="px-6 pb-6">
+            <!-- Step 1: Services -->
+            <div id="step1" class="step active">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold mb-2">Escolha seu serviço</h2>
+                    <p class="text-gray-500">Selecione o serviço desejado para continuar</p>
+                </div>
+                
+                <div class="space-y-4 mb-8" id="services-container">
+                    <div class="flex justify-center items-center py-8">
+                        <div class="loader"></div>
+                        <span class="ml-3 text-gray-500">Carregando serviços...</span>
+                    </div>
+                </div>
+                
+                <button id="nextStep1" class="w-full py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md" disabled>
+                    Continuar <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+
+            <!-- Step 2: Professional Selection -->
+            <div id="step2" class="step hidden">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold mb-2">Escolha a profissional</h2>
+                    <p class="text-gray-500">Selecione uma esteticista para seu atendimento</p>
+                </div>
+                
+                <div class="space-y-3 mb-8" id="professionals-container">
+                    <div class="flex justify-center items-center py-8">
+                        <div class="loader"></div>
+                        <span class="ml-3 text-gray-500">Carregando profissionais...</span>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <button id="nextStep2" class="w-full py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md" disabled>
+                        Continuar <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                    <button class="back-step w-full py-3 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl font-semibold transition duration-200 shadow-sm">
+                        <i class="fas fa-arrow-left mr-2"></i> Voltar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Date Selection -->
+            <div id="step3" class="step hidden">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold mb-2">Escolha a data</h2>
+                    <p class="text-gray-500">Selecione um dia disponível para seu atendimento</p>
+                </div>
+                
+                <div class="mb-8">
+                    <h3 class="font-semibold mb-3 text-gray-700" id="month-year-display">Carregando datas...</h3>
+                    <div class="scrolling-wrapper mb-2 py-1">
+                        <div class="flex space-x-2" id="dates-container">
+                            <!-- As datas serão carregadas dinamicamente -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <button id="nextStep3" class="w-full py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md" disabled>
+                        Continuar <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                    <button class="back-step w-full py-3 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl font-semibold transition duration-200 shadow-sm">
+                        <i class="fas fa-arrow-left mr-2"></i> Voltar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Time Selection -->
+            <div id="step4" class="step hidden">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold mb-2">Escolha o horário</h2>
+                    <p class="text-gray-500" id="selected-date-time">Selecione um horário disponível</p>
+                </div>
+                
+                <div class="mb-8">
+                    <div class="grid grid-cols-3 gap-3" id="times-container">
+                        <div class="flex justify-center items-center py-8 col-span-3">
+                            <div class="loader"></div>
+                            <span class="ml-3 text-gray-500">Carregando horários...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <button id="nextStep4" class="w-full py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md" disabled>
+                        Continuar <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                    <button class="back-step w-full py-3 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl font-semibold transition duration-200 shadow-sm">
+                        <i class="fas fa-arrow-left mr-2"></i> Voltar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 5: Client Information -->
+            <div id="step5" class="step hidden">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold mb-2">Confirme seu agendamento</h2>
+                    <p class="text-gray-500">Revise os detalhes e informe seus dados</p>
+                </div>
+                
+                <div class="bg-gray-50 p-5 rounded-xl mb-6 border border-gray-100 shadow-sm">
+                    <div class="flex justify-between py-3 border-b border-gray-200 items-center">
+                        <div class="text-gray-500 flex items-center">
+                            <i class="fas fa-cut mr-2"></i> Serviço:
+                        </div>
+                        <div class="font-medium text-right" id="confirm-service">Carregando...</div>
+                    </div>
+                    <div class="flex justify-between py-3 border-b border-gray-200 items-center">
+                        <div class="text-gray-500 flex items-center">
+                            <i class="fas fa-user mr-2"></i> Esteticista:
+                        </div>
+                        <div class="font-medium" id="confirm-professional">Carregando...</div>
+                    </div>
+                    <div class="flex justify-between py-3 border-b border-gray-200 items-center">
+                        <div class="text-gray-500 flex items-center">
+                            <i class="far fa-calendar mr-2"></i> Data:
+                        </div>
+                        <div class="font-medium" id="confirm-date">Carregando...</div>
+                    </div>
+                    <div class="flex justify-between py-3 items-center">
+                        <div class="text-gray-500 flex items-center">
+                            <i class="far fa-clock mr-2"></i> Horário:
+                        </div>
+                        <div class="font-medium" id="confirm-time">Carregando...</div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="font-semibold mb-3 text-gray-700">Seus dados</h3>
+                    <div class="space-y-3">
+                        <div class="relative">
+                            <label for="client-name" class="block text-sm font-medium text-gray-500 mb-1">Nome completo</label>
+                            <input type="text" id="client-name" placeholder="Digite seu nome" class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-300 focus:border-primary-300 transition">
+                        </div>
+                        <div class="relative">
+                            <label for="client-phone" class="block text-sm font-medium text-gray-500 mb-1">Telefone (WhatsApp)</label>
+                            <input type="tel" id="client-phone" placeholder="(99) 99999-9999" class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-300 focus:border-primary-300 transition">
+                        </div>
+                        <div class="relative">
+                            <label for="client-email" class="block text-sm font-medium text-gray-500 mb-1">E-mail (opcional)</label>
+                            <input type="email" id="client-email" placeholder="seu@email.com" class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-300 focus:border-primary-300 transition">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <button id="confirmAppointment" class="w-full py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold transition duration-200 flex items-center justify-center shadow-md">
+                        <span id="confirm-text">Finalizar agendamento</span>
+                        <div id="loading" class="loader hidden ml-2" style="width: 20px; height: 20px;"></div>
+                    </button>
+                    <button class="back-step w-full py-3 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl font-semibold transition duration-200 shadow-sm">
+                        <i class="fas fa-arrow-left mr-2"></i> Voltar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 6: Success -->
+            <div id="step6" class="step hidden">
+                <div class="text-center py-8">
+                    <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-check text-green-500 text-3xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-2">Agendamento confirmado!</h2>
+                    <p class="text-gray-500 mb-8">Seu horário foi reservado com sucesso.</p>
+                    
+                    <div class="bg-gray-50 p-5 rounded-xl mb-8 border border-gray-100 shadow-sm text-left">
+                        <div class="flex justify-between py-3 border-b border-gray-200 items-center">
+                            <div class="text-gray-500 flex items-center">
+                                <i class="fas fa-cut mr-2"></i> Serviço:
+                            </div>
+                            <div class="font-medium" id="success-service">Carregando...</div>
+                        </div>
+                        <div class="flex justify-between py-3 border-b border-gray-200 items-center">
+                            <div class="text-gray-500 flex items-center">
+                                <i class="fas fa-user mr-2"></i> Esteticista:
+                            </div>
+                            <div class="font-medium" id="success-professional">Carregando...</div>
+                        </div>
+                        <div class="flex justify-between py-3 border-b border-gray-200 items-center">
+                            <div class="text-gray-500 flex items-center">
+                                <i class="far fa-calendar mr-2"></i> Data:
+                            </div>
+                            <div class="font-medium" id="success-date">Carregando...</div>
+                        </div>
+                        <div class="flex justify-between py-3 items-center">
+                            <div class="text-gray-500 flex items-center">
+                                <i class="far fa-clock mr-2"></i> Horário:
+                            </div>
+                            <div class="font-medium" id="success-time">Carregando...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <a href="consultar.html" class="block w-full py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold transition duration-200 shadow-md">
+                            <i class="fas fa-search mr-2"></i> Consultar meus agendamentos
+                        </a>
+                        <button onclick="window.location.reload()" class="w-full py-3 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl font-semibold transition duration-200 shadow-sm">
+                            <i class="fas fa-plus mr-2"></i> Fazer novo agendamento
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="p-6 text-center text-gray-400 text-sm border-t border-gray-100 mt-auto">
+            <p class="mb-2">© 2025 Nova Pele Estética. Todos os direitos reservados.</p>
+            <p class="space-x-3">
+                <a href="#" class="text-primary-600 hover:text-primary-700">Termos de uso</a>
+                <span>•</span>
+                <a href="#" class="text-primary-600 hover:text-primary-700">Política de privacidade</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Variáveis globais
+        let currentStep = 1;
+        let appointmentData = {
+            service_id: null,
+            service_name: null,
+            service_price: null,
+            professional_id: null,
+            professional_name: null,
+            date: null,
+            date_formatted: null,
+            time: null,
+            client_name: '',
+            client_phone: '',
+            client_email: ''
+        };
+
+        // Elementos DOM
+        const progressBar = document.getElementById('progressBar');
+        const steps = document.querySelectorAll('.step');
+        const nextButtons = {
+            step1: document.getElementById('nextStep1'),
+            step2: document.getElementById('nextStep2'),
+            step3: document.getElementById('nextStep3'),
+            step4: document.getElementById('nextStep4')
+        };
+        const backButtons = document.querySelectorAll('.back-step');
+        const confirmButton = document.getElementById('confirmAppointment');
+
+        // Containers
+        const servicesContainer = document.getElementById('services-container');
+        const professionalsContainer = document.getElementById('professionals-container');
+        const datesContainer = document.getElementById('dates-container');
+        const timesContainer = document.getElementById('times-container');
+
+        // Atualizar barra de progresso
+        function updateProgressBar(step) {
+            const percentages = [20, 40, 60, 80, 100, 100];
+            progressBar.style.width = `${percentages[step-1]}%`;
+        }
+
+        // Mostrar etapa específica
+        function showStep(stepNumber) {
+            steps.forEach((step, index) => {
+                if (index + 1 === stepNumber) {
+                    step.classList.remove('hidden');
+                    step.classList.add('active');
+                } else {
+                    step.classList.add('hidden');
+                    step.classList.remove('active');
+                }
+            });
+            
+            currentStep = stepNumber;
+            updateProgressBar(stepNumber);
+        }
+
+        // Carregar serviços
+        async function loadServices() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('servicos')
+                    .select('*')
+                    .eq('ativo', true)
+                    .order('nome');
+                
+                if (error) throw error;
+                
+                servicesContainer.innerHTML = '';
+                
+                if (data && data.length > 0) {
+                    data.forEach(service => {
+                        const serviceElement = document.createElement('div');
+                        serviceElement.className = 'p-4 border-2 border-gray-100 rounded-xl cursor-pointer transition-all duration-200 hover:border-primary-300';
+                        serviceElement.dataset.serviceId = service.id;
+                        serviceElement.dataset.serviceName = service.nome;
+                        serviceElement.dataset.servicePrice = service.preco || 0;
+                        
+                        serviceElement.innerHTML = `
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 bg-primary-50 rounded-full flex items-center justify-center mr-4">
+                                        <i class="fas fa-spa text-primary-600 text-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold">${service.nome}</h3>
+                                        <p class="text-sm text-gray-500">${service.duracao_minutos || 60} minutos</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-bold text-primary-600">R$ ${(service.preco || 0).toFixed(2).replace('.', ',')}</div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        serviceElement.addEventListener('click', () => {
+                            document.querySelectorAll('#services-container > div').forEach(item => {
+                                item.classList.remove('service-selected');
+                            });
+                            serviceElement.classList.add('service-selected');
+                            
+                            appointmentData.service_id = service.id;
+                            appointmentData.service_name = service.nome;
+                            appointmentData.service_price = service.preco || 0;
+                            
+                            nextButtons.step1.disabled = false;
+                        });
+                        
+                        servicesContainer.appendChild(serviceElement);
+                    });
+                } else {
+                    servicesContainer.innerHTML = '<p class="text-center text-gray-500 py-8">Nenhum serviço disponível no momento.</p>';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar serviços:', error);
+                servicesContainer.innerHTML = '<p class="text-center text-red-500 py-8">Erro ao carregar serviços.</p>';
+            }
+        }
+
+        // Carregar profissionais
+        async function loadProfessionals() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('profissionais')
+                    .select('*')
+                    .eq('ativo', true)
+                    .order('nome');
+                
+                if (error) throw error;
+                
+                professionalsContainer.innerHTML = '';
+                
+                if (data && data.length > 0) {
+                    data.forEach(professional => {
+                        const professionalElement = document.createElement('div');
+                        professionalElement.className = 'p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-primary-300 transition-all duration-200';
+                        professionalElement.dataset.professionalId = professional.id;
+                        professionalElement.dataset.professionalName = professional.nome;
+                        
+                        professionalElement.innerHTML = `
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
+                                    <img src="${professional.photo_url || 'https://via.placeholder.com/48x48/ec4899/ffffff?text=' + professional.nome.charAt(0)}" 
+                                         class="w-full h-full object-cover"
+                                         onerror="this.src='https://via.placeholder.com/48x48/ec4899/ffffff?text=${professional.nome.charAt(0)}'">
+                                </div>
+                                <div>
+                                    <p class="font-medium">${professional.nome}</p>
+                                    <p class="text-xs text-gray-500">${professional.especialidade || 'Esteticista profissional'}</p>
+                                </div>
+                            </div>
+                        `;
+                        
+                        professionalElement.addEventListener('click', () => {
+                            document.querySelectorAll('#professionals-container > div').forEach(item => {
+                                item.classList.remove('professional-selected');
+                            });
+                            professionalElement.classList.add('professional-selected');
+                            
+                            appointmentData.professional_id = professional.id;
+                            appointmentData.professional_name = professional.nome;
+                            
+                            nextButtons.step2.disabled = false;
+                        });
+                        
+                        professionalsContainer.appendChild(professionalElement);
+                    });
+                } else {
+                    professionalsContainer.innerHTML = '<p class="text-center text-gray-500 py-8">Nenhum profissional disponível no momento.</p>';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar profissionais:', error);
+                professionalsContainer.innerHTML = '<p class="text-center text-red-500 py-8">Erro ao carregar profissionais.</p>';
+            }
+        }
+
+        // Carregar datas
+        function loadDates() {
+            const today = new Date();
+            const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            document.getElementById('month-year-display').textContent = `${monthNames[today.getMonth()]} ${today.getFullYear()}`;
+            
+            datesContainer.innerHTML = '';
+            
+            for (let i = 0; i < 14; i++) {
+                const date = new Date();
+                date.setDate(today.getDate() + i);
+                
+                // Pular domingos
+                if (date.getDay() === 0) continue;
+                
+                const dayNames = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
+                const dayNamesFull = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+                
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const formattedDate = `${year}-${month}-${day}`;
+                const displayDate = `${day}/${month}/${year}`;
+                
+                const dateElement = document.createElement('div');
+                dateElement.className = 'flex-shrink-0 w-16 py-3 text-center border border-gray-100 rounded-lg cursor-pointer hover:border-primary-300 bg-white transition-all duration-200';
+                dateElement.dataset.date = formattedDate;
+                dateElement.dataset.displayDate = displayDate;
+                dateElement.dataset.dayName = dayNamesFull[date.getDay()];
+                
+                dateElement.innerHTML = `
+                    <div class="text-xs text-gray-400 font-medium">${dayNames[date.getDay()]}</div>
+                    <div class="font-semibold text-gray-800 mt-1">${date.getDate()}</div>
+                `;
+                
+                dateElement.addEventListener('click', () => {
+                    document.querySelectorAll('#dates-container > div').forEach(item => {
+                        item.classList.remove('date-selected');
+                    });
+                    dateElement.classList.add('date-selected');
+                    
+                    appointmentData.date = formattedDate;
+                    appointmentData.date_formatted = displayDate;
+                    appointmentData.day_name = dayNamesFull[date.getDay()];
+                    
+                    nextButtons.step3.disabled = false;
+                });
+                
+                datesContainer.appendChild(dateElement);
+            }
+        }
+
+        // Carregar horários
+        async function loadTimes() {
+            timesContainer.innerHTML = `
+                <div class="flex justify-center items-center py-8 col-span-3">
+                    <div class="loader"></div>
+                    <span class="ml-3 text-gray-500">Verificando horários disponíveis...</span>
+                </div>
+            `;
+            
+            document.getElementById('selected-date-time').textContent = 
+                `${appointmentData.day_name}, ${appointmentData.date_formatted} - ${appointmentData.professional_name}`;
+                
+            try {
+                const times = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+                
+                // Verificar agendamentos existentes
+                const { data: bookedTimes, error } = await supabaseClient
+                    .from('agendamentos')
+                    .select('hora_agendamento')
+                    .eq('data_agendamento', appointmentData.date)
+                    .eq('profissional_id', appointmentData.professional_id)
+                    .neq('status', 'cancelado');
+                
+                if (error) throw error;
+                
+                const bookedTimesArray = bookedTimes ? bookedTimes.map(item => item.hora_agendamento.slice(0, 5)) : [];
+                
+                timesContainer.innerHTML = '';
+                
+                times.forEach(time => {
+                    const isAvailable = !bookedTimesArray.includes(time);
+                    if (!isAvailable) return;
+
+                    const timeElement = document.createElement('div');
+                    timeElement.className = 'py-3 border border-gray-200 rounded-lg text-center cursor-pointer hover:border-primary-300 bg-white transition-all duration-200';
+                    timeElement.textContent = time;
+                    timeElement.dataset.time = time;
+
+                    timeElement.addEventListener('click', () => {
+                        document.querySelectorAll('#times-container > div').forEach(item => {
+                            item.classList.remove('time-selected');
+                        });
+                        timeElement.classList.add('time-selected');
+
+                        appointmentData.time = time;
+                        nextButtons.step4.disabled = false;
+                    });
+
+                    timesContainer.appendChild(timeElement);
+                });
+                
+            } catch (error) {
+                console.error('Erro ao carregar horários:', error);
+                timesContainer.innerHTML = '<p class="text-center text-red-500 py-8 col-span-3">Erro ao carregar horários.</p>';
+            }
+        }
+
+        // Formatação do telefone
+        document.getElementById('client-phone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            
+            if (value.length > 11) {
+                value = value.substring(0, 11);
+            }
+            
+            if (value.length > 2) {
+                value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
+            }
+            if (value.length > 10) {
+                value = `${value.substring(0, 10)}-${value.substring(10)}`;
+            }
+            
+            e.target.value = value;
+        });
+
+        // Event listeners para navegação
+        nextButtons.step1.addEventListener('click', () => {
+            showStep(2);
+            loadProfessionals();
+        });
+        
+        nextButtons.step2.addEventListener('click', () => {
+            showStep(3);
+            loadDates();
+        });
+        
+        nextButtons.step3.addEventListener('click', () => {
+            showStep(4);
+            loadTimes();
+        });
+        
+        nextButtons.step4.addEventListener('click', () => {
+            showStep(5);
+            
+            // Atualizar informações de confirmação
+            document.getElementById('confirm-service').textContent = appointmentData.service_name;
+            document.getElementById('confirm-professional').textContent = appointmentData.professional_name;
+            document.getElementById('confirm-date').textContent = `${appointmentData.day_name}, ${appointmentData.date_formatted}`;
+            document.getElementById('confirm-time').textContent = appointmentData.time;
+        });
+
+        // Botões de voltar
+        backButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                if (currentStep > 1) {
+                    showStep(currentStep - 1);
+                }
+            });
+        });
+
+        // Confirmar agendamento
+        confirmButton.addEventListener('click', async () => {
+            const name = document.getElementById('client-name').value.trim();
+            const phone = document.getElementById('client-phone').value.trim();
+            const email = document.getElementById('client-email').value.trim();
+            
+            if (!name) {
+                alert('Por favor, informe seu nome completo.');
+                return;
+            }
+            
+            if (!phone || phone.replace(/\D/g, '').length < 10) {
+                alert('Por favor, informe um telefone válido.');
+                return;
+            }
+            
+            if (email && !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                alert('Por favor, informe um e-mail válido ou deixe o campo em branco.');
+                return;
+            }
+            
+            appointmentData.client_name = name;
+            appointmentData.client_phone = phone;
+            appointmentData.client_email = email;
+            
+            // Mostrar loading
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('confirm-text').textContent = 'Finalizando...';
+            confirmButton.disabled = true;
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('agendamentos')
+                    .insert([
+                        {
+                            cliente_nome: appointmentData.client_name,
+                            cliente_telefone: appointmentData.client_phone.replace(/\D/g, ''),
+                            email: appointmentData.client_email || null,
+                            servico_id: appointmentData.service_id,
+                            profissional_id: appointmentData.professional_id,
+                            data_agendamento: appointmentData.date,
+                            hora_agendamento: appointmentData.time,
+                            status: 'confirmado'
+                        }
+                    ]);
+                
+                if (error) throw error;
+                
+                // Atualizar informações na tela de sucesso
+                document.getElementById('success-service').textContent = appointmentData.service_name;
+                document.getElementById('success-professional').textContent = appointmentData.professional_name;
+                document.getElementById('success-date').textContent = appointmentData.date_formatted;
+                document.getElementById('success-time').textContent = appointmentData.time;
+                
+                showStep(6);
+                
+            } catch (error) {
+                console.error('Erro ao criar agendamento:', error);
+                alert('Erro ao criar agendamento. Por favor, tente novamente.');
+                
+                // Esconder loading
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('confirm-text').textContent = 'Finalizar agendamento';
+                confirmButton.disabled = false;
+            }
+        });
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            loadServices();
+        });
+    </script>
+</body>
+</html>
