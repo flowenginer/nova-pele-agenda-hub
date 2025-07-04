@@ -20,7 +20,7 @@
         
         if (!USER_ID) {
             alert('Link inválido. Entre em contato com o estabelecimento.');
-            window.location.href = '/';
+            window.location.href = 'index.html';
         }
     </script>
     <style>
@@ -157,9 +157,9 @@
                 <div id="appointment-summary" class="bg-gray-50 p-4 rounded-lg mb-6">
                     <!-- Resumo do agendamento -->
                 </div>
-                <a href="index.html" class="inline-block py-3 px-6 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white rounded-xl font-semibold transition">
+                <button onclick="window.location.href='index.html?user=' + USER_ID" class="inline-block py-3 px-6 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white rounded-xl font-semibold transition">
                     Voltar ao Início
-                </a>
+                </button>
             </div>
         </main>
     </div>
@@ -196,7 +196,7 @@
 
         async function loadServices() {
             try {
-                console.log('Carregando serviços para USER_ID:', USER_ID);
+                console.log('Carregando serviços...');
                 const { data, error } = await supabaseClient
                     .from('servicos')
                     .select('*')

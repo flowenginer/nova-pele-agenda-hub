@@ -110,20 +110,22 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
                           >
                             <CardContent className="p-4">
                               <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                  <h4 className="font-medium text-gray-800 truncate">
-                                    {appointment.professional?.name || 'Profissional não encontrado'}
-                                  </h4>
-                                  <Badge 
-                                    className={`text-xs cursor-pointer transition-colors ${statusColors[appointment.status]}`}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const nextStatus = getNextStatus(appointment.status);
-                                      if (nextStatus) onStatusChange(appointment.id, nextStatus);
-                                    }}
-                                  >
-                                    {column.title}
-                                  </Badge>
+                                <div className="flex items-start justify-between mb-2">
+                                  <div className="flex-1">
+                                    <h4 className="font-medium text-gray-800 truncate text-lg">
+                                      {appointment.client?.name || 'Cliente não identificado'}
+                                    </h4>
+                                    <Badge 
+                                      className={`text-xs cursor-pointer transition-colors mt-1 ${statusColors[appointment.status]}`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const nextStatus = getNextStatus(appointment.status);
+                                        if (nextStatus) onStatusChange(appointment.id, nextStatus);
+                                      }}
+                                    >
+                                      {column.title}
+                                    </Badge>
+                                  </div>
                                 </div>
                                 
                                 <div className="space-y-2 text-sm text-gray-600">
@@ -135,6 +137,11 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
                                   <div className="flex items-center space-x-2">
                                     <Clock className="w-4 h-4" />
                                     <span className="truncate">{appointment.service?.name}</span>
+                                  </div>
+
+                                  <div className="flex items-center space-x-2">
+                                    <User className="w-4 h-4" />
+                                    <span className="truncate">{appointment.professional?.name || 'Profissional não definido'}</span>
                                   </div>
                                 </div>
 

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -37,9 +38,23 @@
             if (USER_ID) {
                 window.location.href = `${page}?user=${USER_ID}`;
             } else {
-                window.location.href = page;
+                alert('Link inválido. Entre em contato com o estabelecimento.');
             }
         }
+
+        // Verificar se USER_ID existe ao carregar a página
+        window.addEventListener('DOMContentLoaded', function() {
+            if (!USER_ID) {
+                document.body.innerHTML = `
+                    <div class="min-h-screen flex items-center justify-center bg-gray-50">
+                        <div class="text-center p-8">
+                            <h1 class="text-2xl font-bold text-gray-800 mb-4">Link Inválido</h1>
+                            <p class="text-gray-600">Entre em contato com o estabelecimento para obter um link válido.</p>
+                        </div>
+                    </div>
+                `;
+            }
+        });
     </script>
     <style>
         @keyframes fadeIn {
