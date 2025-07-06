@@ -9,27 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#fdf2f8',
-                            100: '#fce7f3',
-                            200: '#fbcfe8',
-                            300: '#f9a8d4',
-                            400: '#f472b6',
-                            500: '#ec4899',
-                            600: '#db2777',
-                            700: '#be185d',
-                            800: '#9d174d',
-                            900: '#831843',
-                        }
-                    }
-                }
-            }
-        }
-
         // Inicialização do cliente Supabase
         const supabaseUrl = 'https://flvkbiwftlonwlzextmx.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsdmtiaXdmdGxvbndsemV4dG14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkyNDMyNzQsImV4cCI6MjA2NDgxOTI3NH0.owDvN4PQX9MAX2OHlbBgupsF7W5Whom7v4qDqDwzFj4';
@@ -54,7 +33,11 @@
             logo_url: '',
             titulo_pagina: 'Nova Pele Estética',
             subtitulo_pagina: 'Cuidando melhor de você',
-            mensagem_boas_vindas: 'Bem-vinda à Nova Pele Estética! Agende seu horário online e transforme sua beleza com nossos tratamentos especializados.'
+            mensagem_boas_vindas: 'Bem-vinda à Nova Pele Estética! Agende seu horário online e transforme sua beleza com nossos tratamentos especializados.',
+            cor_primaria: '#ec4899',
+            telefone_contato: '(11) 99999-9999',
+            whatsapp_contato: '(11) 99999-9999',
+            endereco_contato: 'Rua das Flores, 123 - Centro'
         };
 
         // Carregar configurações do sistema
@@ -69,7 +52,10 @@
 
                 if (data) {
                     console.log('Configurações carregadas:', data);
-                    systemSettings = data;
+                    systemSettings = {
+                        ...systemSettings,
+                        ...data
+                    };
                     updatePageWithSettings();
                 } else {
                     console.log('Nenhuma configuração encontrada, usando padrões');
@@ -87,40 +73,78 @@
             
             document.title = `${systemSettings.titulo_pagina || systemSettings.nome_clinica} - Agendamento Online`;
             
+            // Atualizar cores CSS
+            const primaryColor = systemSettings.cor_primaria || '#ec4899';
+            tailwind.config.theme.extend.colors.primary = {
+                50: primaryColor + '20',
+                100: primaryColor + '30',
+                200: primaryColor + '40',
+                300: primaryColor + '60',
+                400: primaryColor + '80',
+                500: primaryColor,
+                600: primaryColor,
+                700: primaryColor,
+                800: primaryColor,
+                900: primaryColor
+            };
+
+            // Atualizar elementos do DOM
+            const style = document.createElement('style');
+            style.textContent = `
+                .gradient-bg {
+                    background: linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%);
+                }
+                .text-primary-600 { color: ${primaryColor}; }
+                .text-primary-700 { color: ${primaryColor}; }
+                .hover\\:text-primary-700:hover { color: ${primaryColor}; }
+                .bg-primary-50 { background-color: ${primaryColor}20; }
+            `;
+            document.head.appendChild(style);
+            
             // Atualizar logo
             const logoImg = document.getElementById('clinic-logo');
-            if (logoImg) {
+            const logoContainer = document.getElementById('logo-container');
+            if (logoContainer) {
                 if (systemSettings.logo_url) {
-                    logoImg.src = systemSettings.logo_url;
-                    logoImg.style.display = 'block';
+                    logoContainer.innerHTML = `<img id="clinic-logo" src="${systemSettings.logo_url}" alt="${systemSettings.nome_clinica}" class="w-full h-full object-cover">`;
                 } else {
-                    logoImg.style.display = 'none';
-                    // Mostrar inicial da clínica
-                    const logoContainer = logoImg.parentElement;
                     logoContainer.innerHTML = `<span class="text-white font-bold text-2xl">${(systemSettings.nome_clinica || 'N').charAt(0)}</span>`;
                 }
-                logoImg.alt = systemSettings.nome_clinica || 'Logo';
             }
 
-            // Atualizar nome da clínica
+            // Atualizar textos
             const clinicName = document.getElementById('clinic-name');
             if (clinicName) {
                 clinicName.textContent = systemSettings.nome_clinica || 'Nova Pele Estética';
             }
 
-            // Atualizar subtítulo
             const clinicSubtitle = document.getElementById('clinic-subtitle');
             if (clinicSubtitle) {
                 clinicSubtitle.textContent = systemSettings.subtitulo_pagina || 'Cuidando melhor de você!';
             }
 
-            // Atualizar mensagem de boas-vindas
             const welcomeMessage = document.getElementById('welcome-message');
             if (welcomeMessage) {
-                welcomeMessage.textContent = systemSettings.mensagem_boas_vindas || 'Bem-vinda à Nova Pele Estética! Agende seu horário online e transforme sua beleza com nossos tratamentos especializados.';
+                welcomeMessage.textContent = systemSettings.mensagem_boas_vindas || 'Bem-vinda à Nova Pele Estética! Agende seu horário online e transforme sua beleza com nostos tratamentos especializados.';
             }
 
-            // Atualizar nome da clínica no rodapé
+            // Atualizar informações de contato
+            const phoneText = document.getElementById('phone-text');
+            if (phoneText) {
+                phoneText.textContent = systemSettings.telefone_contato || '(11) 99999-9999';
+            }
+
+            const whatsappText = document.getElementById('whatsapp-text');
+            if (whatsappText) {
+                whatsappText.textContent = systemSettings.whatsapp_contato || '(11) 99999-9999';
+            }
+
+            const addressText = document.getElementById('address-text');
+            if (addressText) {
+                addressText.textContent = systemSettings.endereco_contato || 'Rua das Flores, 123 - Centro';
+            }
+
+            // Atualizar rodapé
             const footerClinicName = document.getElementById('footer-clinic-name');
             if (footerClinicName) {
                 footerClinicName.textContent = systemSettings.nome_clinica || 'Nova Pele Estética';
@@ -184,8 +208,7 @@
         <header class="relative overflow-hidden">
             <div class="gradient-bg text-white p-8 pb-12">
                 <div class="text-center fade-in">
-                    <div class="w-24 h-24 rounded-full bg-white mx-auto mb-4 overflow-hidden shadow-lg float flex items-center justify-center">
-                        <img id="clinic-logo" src="" alt="Logo" class="w-full h-full object-cover" style="display: none;">
+                    <div id="logo-container" class="w-24 h-24 rounded-full bg-white mx-auto mb-4 overflow-hidden shadow-lg float flex items-center justify-center">
                         <span class="text-gray-800 font-bold text-2xl">N</span>
                     </div>
                     <h1 id="clinic-name" class="text-3xl font-bold mb-2">Nova Pele Estética</h1>
@@ -288,7 +311,7 @@
                             </div>
                             <div>
                                 <p class="font-medium text-gray-800">Telefone</p>
-                                <p class="text-sm text-gray-600">(11) 99999-9999</p>
+                                <p id="phone-text" class="text-sm text-gray-600">(11) 99999-9999</p>
                             </div>
                         </div>
                         <div class="flex items-center space-x-3">
@@ -297,7 +320,7 @@
                             </div>
                             <div>
                                 <p class="font-medium text-gray-800">WhatsApp</p>
-                                <p class="text-sm text-gray-600">(11) 99999-9999</p>
+                                <p id="whatsapp-text" class="text-sm text-gray-600">(11) 99999-9999</p>
                             </div>
                         </div>
                         <div class="flex items-center space-x-3">
@@ -306,7 +329,7 @@
                             </div>
                             <div>
                                 <p class="font-medium text-gray-800">Endereço</p>
-                                <p class="text-sm text-gray-600">Rua das Flores, 123 - Centro</p>
+                                <p id="address-text" class="text-sm text-gray-600">Rua das Flores, 123 - Centro</p>
                             </div>
                         </div>
                     </div>

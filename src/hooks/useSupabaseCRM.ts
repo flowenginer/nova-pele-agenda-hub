@@ -400,23 +400,48 @@ export const useSupabaseCRM = () => {
   // Settings operations
   const updateSettings = async (updates: Partial<SystemSettings>) => {
     try {
-      if (!settings?.id) return;
-
-      const { data, error } = await supabase
+      // Check if settings exist first
+      const { data: existingSettings, error: fetchError } = await supabase
         .from('configuracoes_sistema')
-        .update(updates)
-        .eq('id', settings.id)
-        .select()
-        .single();
+        .select('id')
+        .limit(1)
+        .maybeSingle();
 
-      if (error) throw error;
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError;
+      }
 
-      setSettings(data as SystemSettings);
+      let result;
+
+      if (existingSettings?.id) {
+        // Update existing settings
+        const { data, error } = await supabase
+          .from('configuracoes_sistema')
+          .update(updates)
+          .eq('id', existingSettings.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        result = data;
+      } else {
+        // Create new settings record
+        const { data, error } = await supabase
+          .from('configuracoes_sistema')
+          .insert([updates])
+          .select()
+          .single();
+
+        if (error) throw error;
+        result = data;
+      }
+
+      setSettings(result as SystemSettings);
       toast({
         title: "Configurações salvas",
         description: "Configurações foram atualizadas com sucesso.",
       });
-      return data;
+      return result;
     } catch (error) {
       console.error('Error updating settings:', error);
       toast({

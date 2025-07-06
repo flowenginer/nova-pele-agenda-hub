@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consultar Agendamento</title>
+    <title>Consultar Agendamentos - Nova Pele Estética</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -13,25 +12,20 @@
         const supabaseUrl = 'https://flvkbiwftlonwlzextmx.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsdmtiaXdmdGxvbndsemV4dG14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkyNDMyNzQsImV4cCI6MjA2NDgxOTI3NH0.owDvN4PQX9MAX2OHlbBgupsF7W5Whom7v4qDqDwzFj4';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-        
-        // Capturar USER ID da URL
+
+        // Capturar parâmetros da URL
         const urlParams = new URLSearchParams(window.location.search);
         const USER_ID = urlParams.get('user');
-        
-        if (!USER_ID) {
-            alert('Link inválido. Entre em contato com o estabelecimento.');
-            window.location.href = 'index.html';
-        }
 
         // Configurações do sistema
         let systemSettings = {
             nome_clinica: 'Nova Pele Estética',
-            logo_url: 'https://flvkbiwftlonwlzextmx.supabase.co/storage/v1/object/public/profile-photos//ChatGPT%20Image%209%20de%20jun.%20de%202025,%2012_41_57.png',
+            logo_url: '',
             titulo_pagina: 'Nova Pele Estética',
-            subtitulo_pagina: 'Consulte seus agendamentos'
+            cor_primaria: '#ec4899'
         };
 
-        // Carregar configurações do sistema
+        // Carregar configurações
         async function loadSystemSettings() {
             try {
                 const { data, error } = await supabaseClient
@@ -41,572 +35,181 @@
                     .single();
 
                 if (data) {
-                    systemSettings = data;
+                    systemSettings = { ...systemSettings, ...data };
                     updatePageWithSettings();
                 }
             } catch (error) {
                 console.log('Usando configurações padrão');
+                updatePageWithSettings();
             }
         }
 
         // Atualizar página com configurações
         function updatePageWithSettings() {
-            document.title = `Consultar Agendamento - ${systemSettings.nome_clinica}`;
+            document.title = `Consultar Agendamentos - ${systemSettings.nome_clinica}`;
             
-            // Atualizar logo
-            const logoImg = document.getElementById('clinic-logo');
-            if (logoImg && systemSettings.logo_url) {
-                logoImg.src = systemSettings.logo_url;
-                logoImg.alt = systemSettings.nome_clinica;
+            // Atualizar cores
+            const primaryColor = systemSettings.cor_primaria || '#ec4899';
+            const style = document.createElement('style');
+            style.textContent = `
+                .gradient-bg { background: linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%); }
+                .text-primary-600 { color: ${primaryColor}; }
+                .border-primary-500 { border-color: ${primaryColor}; }
+                .bg-primary-500 { background-color: ${primaryColor}; }
+                .hover\\:bg-primary-600:hover { background-color: ${primaryColor}ee; }
+            `;
+            document.head.appendChild(style);
+
+            // Atualizar logo e nome
+            const logoContainer = document.getElementById('logo-container');
+            if (logoContainer) {
+                if (systemSettings.logo_url) {
+                    logoContainer.innerHTML = `<img src="${systemSettings.logo_url}" alt="${systemSettings.nome_clinica}" class="w-full h-full object-cover">`;
+                } else {
+                    logoContainer.innerHTML = `<span class="text-white font-bold text-2xl">${(systemSettings.nome_clinica || 'N').charAt(0)}</span>`;
+                }
             }
 
-            // Atualizar nome da clínica
-            const clinicName = document.getElementById('clinic-name');
-            if (clinicName) {
-                clinicName.textContent = systemSettings.nome_clinica || 'Nova Pele Estética';
-            }
-
-            // Atualizar subtítulo
-            const clinicSubtitle = document.getElementById('clinic-subtitle');
-            if (clinicSubtitle) {
-                clinicSubtitle.textContent = 'Consulte seus agendamentos';
+            const pageTitle = document.getElementById('page-title');
+            if (pageTitle) {
+                pageTitle.textContent = `${systemSettings.nome_clinica || 'Nova Pele Estética'} - Consultar`;
             }
         }
 
-        // Carregar configurações quando a página carregar
+        let appointments = [];
+
+        async function fetchAppointments() {
+            const userId = urlParams.get('user');
+            if (!userId) {
+                alert('Usuário não especificado.');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('agendamentos')
+                    .select('*')
+                    .eq('cliente_id', userId);
+
+                if (error) {
+                    console.error('Erro ao buscar agendamentos:', error);
+                    alert('Erro ao buscar agendamentos.');
+                    return;
+                }
+
+                appointments = data || [];
+                displayAppointments();
+            } catch (error) {
+                console.error('Erro inesperado:', error);
+                alert('Erro inesperado ao buscar agendamentos.');
+            }
+        }
+
+        function displayAppointments() {
+            const appointmentsDiv = document.getElementById('appointments');
+            if (!appointmentsDiv) return;
+
+            appointmentsDiv.innerHTML = ''; // Limpa os agendamentos anteriores
+
+            if (appointments.length === 0) {
+                appointmentsDiv.innerHTML = '<p>Nenhum agendamento encontrado.</p>';
+                return;
+            }
+
+            appointments.forEach(appointment => {
+                const div = document.createElement('div');
+                div.className = 'bg-white p-4 rounded-md shadow-sm mb-4';
+
+                div.innerHTML = `
+                    <h3 class="font-semibold text-lg">Agendamento para ${appointment.data_agendamento} às ${appointment.hora_agendamento}</h3>
+                    <p>Serviço: ${appointment.servico_id}</p>
+                    <p>Status: ${appointment.status}</p>
+                    <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-2"
+                            onclick="cancelAppointment(${appointment.id})">
+                        Cancelar Agendamento
+                    </button>
+                `;
+                appointmentsDiv.appendChild(div);
+            });
+        }
+
+        async function cancelAppointment(appointmentId) {
+            if (confirm('Tem certeza de que deseja cancelar este agendamento?')) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('agendamentos')
+                        .delete()
+                        .eq('id', appointmentId);
+
+                    if (error) {
+                        console.error('Erro ao cancelar agendamento:', error);
+                        alert('Erro ao cancelar agendamento.');
+                        return;
+                    }
+
+                    alert('Agendamento cancelado com sucesso.');
+                    fetchAppointments(); // Atualiza a lista de agendamentos
+                } catch (error) {
+                    console.error('Erro inesperado:', error);
+                    alert('Erro inesperado ao cancelar agendamento.');
+                }
+            }
+        }
+
+        // Verificar USER_ID e carregar página
         window.addEventListener('DOMContentLoaded', function() {
-            loadSystemSettings();
+            if (!USER_ID) {
+                document.body.innerHTML = `
+                    <div class="min-h-screen flex items-center justify-center bg-gray-50">
+                        <div class="text-center p-8">
+                            <h1 class="text-2xl font-bold text-gray-800 mb-4">Link Inválido</h1>
+                            <p class="text-gray-600">Entre em contato com o estabelecimento para obter um link válido.</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                loadSystemSettings();
+            }
         });
     </script>
     <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+        }
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
         @keyframes fadeIn {
             0% { opacity: 0; transform: translateY(20px); }
             100% { opacity: 1; transform: translateY(0); }
         }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.6s ease-out forwards;
-        }
-        
-        .float {
-            animation: float 3s ease-in-out infinite;
-        }
-        
-        .gradient-bg {
-            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
-        }
-        
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-        
-        .card-hover:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-        
-        .primary-button {
-            background: linear-gradient(to right, #ec4899, #be185d);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: bold;
-            transition: background 0.3s ease;
-        }
-        
-        .primary-button:hover {
-            background: linear-gradient(to right, #db2777, #9d174d);
-        }
-        
-        .secondary-button {
-            background-color: #f3f4f6;
-            color: #374151;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: medium;
-            transition: background-color 0.3s ease, color 0.3s ease;
-            border: 1px solid #d1d5db;
-        }
-        
-        .secondary-button:hover {
-            background-color: #e5e7eb;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-        }
-        
-        .modal-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 80%;
-            max-width: 600px;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .modal-close {
-            cursor: pointer;
-            font-size: 20px;
-            color: #6b7280;
-        }
-        
-        .modal-body {
-            margin-bottom: 20px;
-        }
-        
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-        }
-        
-        .modal-footer button {
-            margin-left: 10px;
-        }
-        
-        .modal.active {
-            display: block;
-        }
     </style>
 </head>
-<body class="bg-gray-50 font-sans text-secondary-800">
-    <div class="max-w-lg mx-auto bg-white min-h-screen shadow-sm">
+<body class="bg-gray-50">
+    <div class="max-w-2xl mx-auto bg-white min-h-screen shadow-sm">
         <!-- Header -->
-        <header class="relative overflow-hidden">
-            <div class="gradient-bg text-white p-4 pb-6">
-                <div class="text-center fade-in">
-                    <div class="w-12 h-12 rounded-full bg-white mx-auto mb-2 overflow-hidden shadow-lg float">
-                        <img id="clinic-logo" src="https://flvkbiwftlonwlzextmx.supabase.co/storage/v1/object/public/profile-photos//ChatGPT%20Image%209%20de%20jun.%20de%202025,%2012_41_57.png" alt="Nova Pele Estética" class="w-full h-full object-cover">
-                    </div>
-                    <h1 id="clinic-name" class="text-lg font-bold mb-1">Nova Pele Estética</h1>
-                    <p id="clinic-subtitle" class="text-xs opacity-90">Consulte seus agendamentos</p>
+        <header class="gradient-bg text-white p-6">
+            <div class="flex items-center justify-center space-x-4">
+                <div id="logo-container" class="w-16 h-16 rounded-full bg-white flex items-center justify-center overflow-hidden">
+                    <span class="text-gray-800 font-bold text-2xl">N</span>
                 </div>
-                
-                <!-- Decorative elements -->
-                <div class="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -translate-y-8 translate-x-8"></div>
-                <div class="absolute bottom-0 left-0 w-14 h-14 bg-white/10 rounded-full translate-y-7 -translate-x-7"></div>
+                <div class="text-center">
+                    <h1 id="page-title" class="text-2xl font-bold">Nova Pele Estética - Consultar</h1>
+                    <p class="opacity-90">Consulte seus agendamentos</p>
+                </div>
             </div>
         </header>
 
         <!-- Main Content -->
-        <main class="px-6 py-6">
-            <div class="space-y-6">
-                <!-- Search Section -->
-                <div class="fade-in">
-                    <h2 class="text-lg font-bold text-gray-800 mb-3 text-center">Buscar Agendamentos</h2>
-                    <p class="text-gray-600 text-center mb-4 text-sm">Informe seu telefone ou e-mail para buscar seus agendamentos.</p>
-                    
-                    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-md">
-                        <div class="space-y-4">
-                            <div>
-                                <label for="phone" class="block text-sm font-medium text-gray-700">Telefone</label>
-                                <input type="tel" id="phone" placeholder="(11) 99999-9999" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-3 border" />
-                            </div>
-                            <div class="text-center text-gray-400 text-sm">ou</div>
-                            <div>
-                                <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
-                                <input type="email" id="email" placeholder="seu@email.com" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-3 border" />
-                            </div>
-                            <button id="searchButton" class="primary-button w-full">Buscar Agendamentos</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Results Section -->
-                <div id="results" class="mt-8 space-y-4">
-                    <!-- Agendamento -->
-                </div>
+        <main class="p-8">
+            <h2 class="text-xl font-semibold mb-4">Seus Agendamentos</h2>
+            <div id="appointments">
+                <!-- Agendamentos serão exibidos aqui -->
             </div>
+            <button onclick="fetchAppointments()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Carregar Agendamentos
+            </button>
         </main>
-
-        <!-- Footer -->
-        <footer class="p-6 text-center text-gray-400 text-sm border-t border-gray-100 mt-8">
-            <p class="mb-2">© 2025 <span id="footer-clinic-name">Nova Pele Estética</span>. Todos os direitos reservados.</p>
-            <p class="space-x-3">
-                <a href="#" class="text-primary-600 hover:text-primary-700">Termos de uso</a>
-                <span>•</span>
-                <a href="#" class="text-primary-600 hover:text-primary-700">Política de privacidade</a>
-            </p>
-        </footer>
     </div>
-
-    <!-- Reschedule Modal -->
-    <div id="rescheduleModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="text-lg font-bold">Reagendar Agendamento</h4>
-                <span id="closeRescheduleModal" class="modal-close">&times;</span>
-            </div>
-            <div id="rescheduleBody" class="modal-body">
-                <label for="rescheduleService" class="block text-sm font-medium text-gray-700">Serviço</label>
-                <select id="rescheduleService" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm">
-                    <!-- Services -->
-                </select>
-                
-                <label for="rescheduleDate" class="block text-sm font-medium text-gray-700 mt-4">Data</label>
-                <input type="date" id="rescheduleDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm" />
-                
-                <label for="rescheduleTime" class="block text-sm font-medium text-gray-700 mt-4">Horário</label>
-                <select id="rescheduleTime" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm">
-                    <!-- Times -->
-                </select>
-            </div>
-            <div class="modal-footer">
-                <button id="confirmRescheduleButton" class="primary-button">Confirmar Reagendamento</button>
-                <button id="cancelRescheduleButton" class="secondary-button">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Element declarations
-        const searchButton = document.getElementById("searchButton");
-        const resultsDiv = document.getElementById("results");
-        const phoneInput = document.getElementById("phone");
-        const emailInput = document.getElementById("email");
-        
-        // Reschedule Modal Elements
-        const rescheduleModal = document.getElementById("rescheduleModal");
-        const closeRescheduleModal = document.getElementById("closeRescheduleModal");
-        const rescheduleServiceSelect = document.getElementById("rescheduleService");
-        const rescheduleDateInput = document.getElementById("rescheduleDate");
-        const rescheduleTimeSelect = document.getElementById("rescheduleTime");
-        const confirmRescheduleButton = document.getElementById("confirmRescheduleButton");
-        const cancelRescheduleButton = document.getElementById("cancelRescheduleButton");
-        
-        let selectedAppointmentId;
-        
-        // Function to format date
-        function formatDate(dateString) {
-            const date = new Date(dateString + 'T00:00:00');
-            const options = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' };
-            return date.toLocaleDateString('pt-BR', options);
-        }
-        
-        // Function to format time
-        function formatTime(timeString) {
-            const [hours, minutes] = timeString.split(':');
-            return `${hours}:${minutes}`;
-        }
-        
-        // Function to display message
-        function displayMessage(message, type = 'info') {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `p-4 rounded-md ${type === 'error' ? 'bg-red-100 text-red-800 border border-red-500' : 'bg-blue-100 text-blue-800 border border-blue-500'}`;
-            messageDiv.textContent = message;
-            resultsDiv.appendChild(messageDiv);
-        }
-        
-        // Function to clear results
-        function clearResults() {
-            resultsDiv.innerHTML = '';
-        }
-        
-        // Formatação do telefone
-        phoneInput.addEventListener("input", function (e) {
-            let value = e.target.value.replace(/\D/g, "");
-            
-            if (value.length > 11) {
-                value = value.substring(0, 11);
-            }
-            
-            // Formatação: (00) 00000-0000
-            if (value.length > 2) {
-                value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
-            }
-            if (value.length > 10) {
-                value = `${value.substring(0, 10)}-${value.substring(10)}`;
-            }
-            
-            e.target.value = value;
-        });
-        
-        // Function to search appointments
-        searchButton.addEventListener("click", async () => {
-            clearResults();
-            const phone = phoneInput.value.replace(/\D/g, '');
-            const email = emailInput.value.trim().toLowerCase();
-        
-            if (!phone && !email) {
-                displayMessage("Por favor, informe um telefone ou e-mail para buscar.", 'error');
-                return;
-            }
-        
-            displayMessage("Buscando agendamentos, aguarde...");
-        
-            try {
-                console.log('Buscando agendamentos para USER_ID:', USER_ID, 'Phone:', phone, 'Email:', email);
-                
-                let query = supabaseClient.from("agendamentos").select(`
-                    id,
-                    cliente_nome,
-                    cliente_telefone,
-                    email,
-                    data_agendamento,
-                    hora_agendamento,
-                    status,
-                    valor,
-                    servicos:servico_id (nome, duracao_minutos, preco),
-                    profissionais:profissional_id (nome)
-                `).eq('user_id', parseInt(USER_ID));
-        
-                if (phone) {
-                    query = query.eq("cliente_telefone", phone);
-                } else if (email) {
-                    query = query.ilike("email", `%${email}%`);
-                }
-        
-                const { data, error } = await query.order('data_agendamento', { ascending: false });
-        
-                if (error) {
-                    console.error('Erro na consulta:', error);
-                    throw error;
-                }
-        
-                console.log('Dados retornados:', data);
-                clearResults();
-        
-                if (data && data.length > 0) {
-                    data.forEach(appointment => {
-                        const appointmentDiv = document.createElement("div");
-                        appointmentDiv.className = "bg-white p-6 rounded-2xl border border-gray-100 shadow-md card-hover";
-        
-                        let statusColor = 'bg-gray-100 text-gray-800';
-                        let statusText = appointment.status;
-                        
-                        if (appointment.status === 'confirmado') {
-                            statusColor = 'bg-green-100 text-green-800';
-                            statusText = 'Confirmado';
-                        }
-                        if (appointment.status === 'agendado') {
-                            statusColor = 'bg-blue-100 text-blue-800';
-                            statusText = 'Agendado';
-                        }
-                        if (appointment.status === 'cancelado') {
-                            statusColor = 'bg-red-100 text-red-800';
-                            statusText = 'Cancelado';
-                        }
-                        if (appointment.status === 'concluido') {
-                            statusColor = 'bg-purple-100 text-purple-800';
-                            statusText = 'Concluído';
-                        }
-        
-                        appointmentDiv.innerHTML = `
-                            <h3 class="text-xl font-bold text-gray-800 mb-2">${appointment.servicos?.nome || 'Serviço não definido'}</h3>
-                            <p class="text-gray-600 mb-2">
-                                <i class="fas fa-calendar-alt mr-2"></i> ${formatDate(appointment.data_agendamento)}
-                                <i class="fas fa-clock ml-4 mr-2"></i> ${formatTime(appointment.hora_agendamento)}
-                            </p>
-                            <p class="text-gray-600 mb-2"><i class="fas fa-user mr-2"></i> ${appointment.profissionais?.nome || 'Profissional não definido'}</p>
-                            <p class="text-gray-600 mb-2"><i class="fas fa-phone mr-2"></i> ${appointment.cliente_telefone}</p>
-                            ${appointment.valor ? `<p class="text-gray-600 mb-4"><i class="fas fa-dollar-sign mr-2"></i> R$ ${parseFloat(appointment.valor).toFixed(2)}</p>` : ''}
-                            <div class="mt-4 flex justify-between items-center">
-                                <span class="${statusColor} px-3 py-1 rounded-full text-sm font-medium">${statusText}</span>
-                                <div>
-                                    ${appointment.status !== 'cancelado' && appointment.status !== 'concluido' ? `
-                                        <button 
-                                            class="secondary-button reschedule-button" 
-                                            data-id="${appointment.id}"
-                                        >
-                                            Reagendar
-                                        </button>
-                                    ` : ''}
-                                </div>
-                            </div>
-                        `;
-        
-                        resultsDiv.appendChild(appointmentDiv);
-                    });
-        
-                    // Add event listeners to reschedule buttons
-                    document.querySelectorAll('.reschedule-button').forEach(button => {
-                        button.addEventListener('click', function() {
-                            selectedAppointmentId = this.dataset.id;
-                            openRescheduleModal();
-                        });
-                    });
-                } else {
-                    displayMessage("Nenhum agendamento encontrado com as informações fornecidas.");
-                }
-            } catch (err) {
-                console.error("Erro ao buscar agendamentos:", err);
-                displayMessage("Erro ao buscar agendamentos. Tente novamente.", 'error');
-            }
-        });
-        
-        // Function to open reschedule modal
-        async function openRescheduleModal() {
-            rescheduleModal.classList.add("active");
-        
-            try {
-                console.log('Carregando serviços para reagendamento...');
-                const { data, error } = await supabaseClient
-                    .from("servicos")
-                    .select("*")
-                    .eq('ativo', true)
-                    .order("nome");
-        
-                if (error) {
-                    console.error('Erro ao carregar serviços:', error);
-                    throw error;
-                }
-        
-                rescheduleServiceSelect.innerHTML = '';
-                data.forEach(service => {
-                    const option = document.createElement("option");
-                    option.value = service.id;
-                    option.textContent = service.nome;
-                    rescheduleServiceSelect.appendChild(option);
-                });
-            } catch (err) {
-                console.error("Erro ao carregar serviços:", err);
-                displayMessage("Erro ao carregar serviços para reagendamento.", 'error');
-            }
-        }
-        
-        // Function to close reschedule modal
-        closeRescheduleModal.addEventListener("click", () => {
-            rescheduleModal.classList.remove("active");
-        });
-        
-        // Function to load reschedule times
-        async function loadRescheduleTimes() {
-            const selectedDate = rescheduleDateInput.value;
-            if (!selectedDate) {
-                alert("Por favor, selecione uma data para reagendar.");
-                return;
-            }
-        
-            rescheduleTimeSelect.innerHTML = '<option value="">Carregando horários...</option>';
-        
-            try {
-                console.log('Carregando horários disponíveis para:', selectedDate);
-                const { data: bookedTimes, error } = await supabaseClient
-                    .from("agendamentos")
-                    .select("hora_agendamento")
-                    .eq("data_agendamento", selectedDate)
-                    .eq('user_id', parseInt(USER_ID))
-                    .in("status", ["confirmado", "agendado"]);
-        
-                if (error) {
-                    console.error('Erro ao carregar horários ocupados:', error);
-                    throw error;
-                }
-        
-                const bookedHours = bookedTimes.map(item => item.hora_agendamento);
-                const availableTimes = [];
-                
-                for (let hour = 8; hour <= 18; hour++) {
-                    for (let minute = 0; minute < 60; minute += 30) {
-                        if (hour === 18 && minute > 0) break;
-                        
-                        const formattedHour = String(hour).padStart(2, '0');
-                        const formattedMinute = String(minute).padStart(2, '0');
-                        const time = `${formattedHour}:${formattedMinute}`;
-                        
-                        if (!bookedHours.includes(time)) {
-                            availableTimes.push(time);
-                        }
-                    }
-                }
-        
-                rescheduleTimeSelect.innerHTML = '';
-                if (availableTimes.length === 0) {
-                    rescheduleTimeSelect.innerHTML = '<option value="">Nenhum horário disponível</option>';
-                } else {
-                    availableTimes.forEach(time => {
-                        const option = document.createElement("option");
-                        option.value = time;
-                        option.textContent = time;
-                        rescheduleTimeSelect.appendChild(option);
-                    });
-                }
-            } catch (err) {
-                console.error("Erro ao carregar horários:", err);
-                displayMessage("Erro ao carregar horários para reagendamento.", 'error');
-            }
-        }
-        
-        // Event listener for date change
-        rescheduleDateInput.addEventListener("change", loadRescheduleTimes);
-        
-        // Function to confirm reschedule
-        confirmRescheduleButton.addEventListener("click", async () => {
-            const serviceId = rescheduleServiceSelect.value;
-            const rescheduleDate = rescheduleDateInput.value;
-            const rescheduleTime = rescheduleTimeSelect.value;
-        
-            if (!serviceId || !rescheduleDate || !rescheduleTime) {
-                alert("Por favor, preencha todos os campos para reagendar.");
-                return;
-            }
-        
-            try {
-                console.log('Reagendando appointment ID:', selectedAppointmentId);
-                const { data, error } = await supabaseClient
-                    .from("agendamentos")
-                    .update({
-                        servico_id: serviceId,
-                        data_agendamento: rescheduleDate,
-                        hora_agendamento: rescheduleTime,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq("id", selectedAppointmentId);
-        
-                if (error) {
-                    console.error('Erro ao reagendar:', error);
-                    throw error;
-                }
-        
-                alert("Agendamento reagendado com sucesso!");
-                rescheduleModal.classList.remove("active");
-                searchButton.click(); // Refresh results
-            } catch (err) {
-                console.error("Erro ao reagendar:", err);
-                alert("Erro ao reagendar o agendamento. Tente novamente.");
-            }
-        });
-        
-        // Function to cancel reschedule
-        cancelRescheduleButton.addEventListener("click", () => {
-            rescheduleModal.classList.remove("active");
-        });
-
-        // Atualizar nome da clínica no rodapé
-        function updateFooterClinicName() {
-            const footerClinicName = document.getElementById('footer-clinic-name');
-            if (footerClinicName && systemSettings.nome_clinica) {
-                footerClinicName.textContent = systemSettings.nome_clinica;
-            }
-        }
-
-        // Chamar função para atualizar rodapé quando as configurações carregarem
-        window.addEventListener('DOMContentLoaded', function() {
-            setTimeout(updateFooterClinicName, 1000);
-        });
-    </script>
 </body>
 </html>

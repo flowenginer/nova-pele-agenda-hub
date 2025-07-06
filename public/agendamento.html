@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendar Horário - Nova Pele Estética</title>
+    <title>Agendamento Online - Nova Pele Estética</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -12,25 +12,20 @@
         const supabaseUrl = 'https://flvkbiwftlonwlzextmx.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsdmtiaXdmdGxvbndsemV4dG14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkyNDMyNzQsImV4cCI6MjA2NDgxOTI3NH0.owDvN4PQX9MAX2OHlbBgupsF7W5Whom7v4qDqDwzFj4';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-        
-        // Capturar USER ID da URL
+
+        // Capturar parâmetros da URL
         const urlParams = new URLSearchParams(window.location.search);
         const USER_ID = urlParams.get('user');
-        
-        if (!USER_ID) {
-            alert('Link inválido. Entre em contato com o estabelecimento.');
-            window.location.href = 'index.html';
-        }
 
         // Configurações do sistema
         let systemSettings = {
             nome_clinica: 'Nova Pele Estética',
-            logo_url: 'https://flvkbiwftlonwlzextmx.supabase.co/storage/v1/object/public/profile-photos//ChatGPT%20Image%209%20de%20jun.%20de%202025,%2012_41_57.png',
-            titulo_pagina: 'Nova Pele Estética',
-            subtitulo_pagina: 'Cuidando melhor de você'
+            logo_url: '',
+            titulo_pagina: 'Nova Pele Estética',  
+            cor_primaria: '#ec4899'
         };
 
-        // Carregar configurações do sistema
+        // Carregar configurações
         async function loadSystemSettings() {
             try {
                 const { data, error } = await supabaseClient
@@ -40,80 +35,94 @@
                     .single();
 
                 if (data) {
-                    systemSettings = data;
+                    systemSettings = { ...systemSettings, ...data };
                     updatePageWithSettings();
                 }
             } catch (error) {
                 console.log('Usando configurações padrão');
+                updatePageWithSettings();
             }
         }
 
         // Atualizar página com configurações
         function updatePageWithSettings() {
-            document.title = `Agendar Horário - ${systemSettings.nome_clinica}`;
+            document.title = `Agendamento Online - ${systemSettings.nome_clinica}`;
             
-            // Atualizar logo
-            const logoImg = document.getElementById('clinic-logo');
-            if (logoImg && systemSettings.logo_url) {
-                logoImg.src = systemSettings.logo_url;
-                logoImg.alt = systemSettings.nome_clinica;
+            // Atualizar cores
+            const primaryColor = systemSettings.cor_primaria || '#ec4899';
+            const style = document.createElement('style');
+            style.textContent = `
+                .gradient-bg { background: linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%); }
+                .text-primary-600 { color: ${primaryColor}; }
+                .border-primary-500 { border-color: ${primaryColor}; }
+                .bg-primary-500 { background-color: ${primaryColor}; }
+                .hover\\:bg-primary-600:hover { background-color: ${primaryColor}ee; }
+            `;
+            document.head.appendChild(style);
+
+            // Atualizar logo e nome
+            const logoContainer = document.getElementById('logo-container');
+            if (logoContainer) {
+                if (systemSettings.logo_url) {
+                    logoContainer.innerHTML = `<img src="${systemSettings.logo_url}" alt="${systemSettings.nome_clinica}" class="w-full h-full object-cover">`;
+                } else {
+                    logoContainer.innerHTML = `<span class="text-white font-bold text-2xl">${(systemSettings.nome_clinica || 'N').charAt(0)}</span>`;
+                }
             }
 
-            // Atualizar nome da clínica
             const clinicName = document.getElementById('clinic-name');
             if (clinicName) {
                 clinicName.textContent = systemSettings.nome_clinica || 'Nova Pele Estética';
             }
 
-            // Atualizar subtítulo
-            const clinicSubtitle = document.getElementById('clinic-subtitle');
-            if (clinicSubtitle) {
-                clinicSubtitle.textContent = systemSettings.subtitulo_pagina || 'Agende seu horário online';
+            const pageTitle = document.getElementById('page-title');
+            if (pageTitle) {
+                pageTitle.textContent = `${systemSettings.nome_clinica || 'Nova Pele Estética'} - Agendamento`;
             }
         }
 
         // Carregar configurações quando a página carregar
         window.addEventListener('DOMContentLoaded', function() {
-            loadSystemSettings();
+            if (!USER_ID) {
+                document.body.innerHTML = `
+                    <div class="min-h-screen flex items-center justify-center bg-gray-50">
+                        <div class="text-center p-8">
+                            <h1 class="text-2xl font-bold text-gray-800 mb-4">Link Inválido</h1>
+                            <p class="text-gray-600">Entre em contato com o estabelecimento para obter um link válido.</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                loadSystemSettings();
+                loadServices();
+                loadProfessionals();
+            }
         });
     </script>
     <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+        }
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
         @keyframes fadeIn {
             0% { opacity: 0; transform: translateY(20px); }
             100% { opacity: 1; transform: translateY(0); }
         }
-        
-        .fade-in {
-            animation: fadeIn 0.6s ease-out forwards;
-        }
-        
-        .gradient-bg {
-            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
-        }
-        
-        .selected {
-            background-color: #ec4899;
-            color: white;
-            border-color: #ec4899;
-        }
-        
-        .disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
     </style>
 </head>
-<body class="bg-gray-50 font-sans">
-    <div class="max-w-lg mx-auto bg-white min-h-screen shadow-sm">
+<body class="bg-gray-50">
+    <div class="max-w-2xl mx-auto bg-white min-h-screen shadow-sm">
         <!-- Header -->
-        <header class="relative overflow-hidden">
-            <div class="gradient-bg text-white p-6 pb-8">
-                <div class="text-center fade-in">
-                    <div class="w-16 h-16 rounded-full bg-white mx-auto mb-3 overflow-hidden shadow-lg">
-                        <img id="clinic-logo" src="https://flvkbiwftlonwlzextmx.supabase.co/storage/v1/object/public/profile-photos//ChatGPT%20Image%209%20de%20jun.%20de%202025,%2012_41_57.png" alt="Nova Pele Estética" class="w-full h-full object-cover">
-                    </div>
-                    <h1 id="clinic-name" class="text-2xl font-bold mb-1">Nova Pele Estética</h1>
-                    <p id="clinic-subtitle" class="text-sm opacity-90">Agende seu horário online</p>
+        <header class="gradient-bg text-white p-6">
+            <div class="flex items-center justify-center space-x-4">
+                <div id="logo-container" class="w-16 h-16 rounded-full bg-white flex items-center justify-center overflow-hidden">
+                    <span class="text-gray-800 font-bold text-2xl">N</span>
+                </div>
+                <div class="text-center">
+                    <h1 id="page-title" class="text-2xl font-bold">Nova Pele Estética - Agendamento</h1>
+                    <p class="opacity-90">Agende seu horário online</p>
                 </div>
             </div>
         </header>
