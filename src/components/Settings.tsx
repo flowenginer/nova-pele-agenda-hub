@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Settings as SettingsIcon, Upload, Save, Phone, MapPin, Palette } from 'lucide-react';
+import { Settings as SettingsIcon, Upload, Save, Phone, MapPin, Palette, Globe } from 'lucide-react';
 import type { SystemSettings } from '../types/supabase';
 
 interface SettingsProps {
@@ -28,9 +28,9 @@ export const Settings = ({ settings, updateSettings }: SettingsProps) => {
     dias_funcionamento: [1, 2, 3, 4, 5],
     logo_url: '',
     cor_primaria: '#ec4899',
-    telefone_contato: '(11) 99999-9999',
-    whatsapp_contato: '(11) 99999-9999',
-    endereco_contato: 'Rua das Flores, 123 - Centro'
+    telefone_contato: '',
+    whatsapp_contato: '',
+    endereco_contato: ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -51,9 +51,9 @@ export const Settings = ({ settings, updateSettings }: SettingsProps) => {
         dias_funcionamento: settings.dias_funcionamento || [1, 2, 3, 4, 5],
         logo_url: settings.logo_url || '',
         cor_primaria: settings.cor_primaria || '#ec4899',
-        telefone_contato: (settings as any).telefone_contato || '(11) 99999-9999',
-        whatsapp_contato: (settings as any).whatsapp_contato || '(11) 99999-9999',
-        endereco_contato: (settings as any).endereco_contato || 'Rua das Flores, 123 - Centro'
+        telefone_contato: (settings as any).telefone_contato || '',
+        whatsapp_contato: (settings as any).whatsapp_contato || '',
+        endereco_contato: (settings as any).endereco_contato || ''
       });
     }
   }, [settings]);
@@ -107,9 +107,9 @@ export const Settings = ({ settings, updateSettings }: SettingsProps) => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-nova-pink-600 to-nova-purple-600 bg-clip-text text-transparent">
-            Configurações
+            Configurações do Sistema
           </h2>
-          <p className="text-gray-600 mt-1">Personalize o sistema e a página de agendamento</p>
+          <p className="text-gray-600 mt-1">Configure sua clínica e personalize as páginas públicas</p>
         </div>
         <Button 
           className="nova-button" 
@@ -117,18 +117,19 @@ export const Settings = ({ settings, updateSettings }: SettingsProps) => {
           disabled={loading}
         >
           <Save className="w-4 h-4 mr-2" />
-          {loading ? 'Salvando...' : 'Salvar Tudo'}
+          {loading ? 'Salvando...' : 'Salvar Configurações'}
         </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Configurações da Página de Agendamento */}
+        {/* Informações da Clínica */}
         <Card className="nova-card animate-fade-in">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-gray-800 flex items-center">
               <SettingsIcon className="w-5 h-5 mr-2" />
-              Página de Agendamento
+              Informações da Clínica
             </CardTitle>
+            <p className="text-sm text-gray-600">Essas informações aparecem em todo o sistema</p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -164,6 +165,51 @@ export const Settings = ({ settings, updateSettings }: SettingsProps) => {
             </div>
             
             <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Nome da Clínica</label>
+              <Input
+                value={formData.nome_clinica}
+                onChange={(e) => setFormData(prev => ({ ...prev, nome_clinica: e.target.value }))}
+                placeholder="Nova Pele Estética"
+              />
+              <p className="text-xs text-gray-500">Aparece no cabeçalho e título das páginas</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 flex items-center">
+                <Palette className="w-4 h-4 mr-2" />
+                Cor Primária do Sistema
+              </label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  type="color"
+                  value={formData.cor_primaria}
+                  onChange={(e) => setFormData(prev => ({ ...prev, cor_primaria: e.target.value }))}
+                  className="w-16 h-10 p-1 border rounded"
+                />
+                <Input
+                  type="text"
+                  value={formData.cor_primaria}
+                  onChange={(e) => setFormData(prev => ({ ...prev, cor_primaria: e.target.value }))}
+                  placeholder="#ec4899"
+                  className="flex-1"
+                />
+              </div>
+              <p className="text-xs text-gray-500">Define a cor dos botões e elementos em destaque</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Páginas Públicas */}
+        <Card className="nova-card animate-fade-in">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-gray-800 flex items-center">
+              <Globe className="w-5 h-5 mr-2" />
+              Páginas Públicas
+            </CardTitle>
+            <p className="text-sm text-gray-600">Textos que aparecem nas páginas de agendamento</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Título da Página</label>
               <Input
                 value={formData.titulo_pagina}
@@ -187,6 +233,7 @@ export const Settings = ({ settings, updateSettings }: SettingsProps) => {
                 value={formData.mensagem_boas_vindas}
                 onChange={(e) => setFormData(prev => ({ ...prev, mensagem_boas_vindas: e.target.value }))}
                 rows={3}
+                placeholder="Bem-vinda à nossa clínica!"
               />
             </div>
             
@@ -196,52 +243,23 @@ export const Settings = ({ settings, updateSettings }: SettingsProps) => {
                 value={formData.mensagem_confirmacao}
                 onChange={(e) => setFormData(prev => ({ ...prev, mensagem_confirmacao: e.target.value }))}
                 rows={2}
+                placeholder="Agendamento realizado com sucesso!"
               />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 flex items-center">
-                <Palette className="w-4 h-4 mr-2" />
-                Cor Primária
-              </label>
-              <div className="flex items-center space-x-2">
-                <Input
-                  type="color"
-                  value={formData.cor_primaria}
-                  onChange={(e) => setFormData(prev => ({ ...prev, cor_primaria: e.target.value }))}
-                  className="w-16 h-10 p-1 border rounded"
-                />
-                <Input
-                  type="text"
-                  value={formData.cor_primaria}
-                  onChange={(e) => setFormData(prev => ({ ...prev, cor_primaria: e.target.value }))}
-                  placeholder="#ec4899"
-                  className="flex-1"
-                />
-              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Configurações Gerais do Sistema */}
+        {/* Funcionamento */}
         <Card className="nova-card animate-fade-in">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-gray-800">
-              Configurações Gerais
+              Horário de Funcionamento
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Nome da Clínica</label>
-              <Input
-                value={formData.nome_clinica}
-                onChange={(e) => setFormData(prev => ({ ...prev, nome_clinica: e.target.value }))}
-              />
-            </div>
-            
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Horário de Abertura</label>
+                <label className="text-sm font-medium text-gray-700">Abertura</label>
                 <Input
                   type="time"
                   value={formData.horario_inicio}
@@ -250,7 +268,7 @@ export const Settings = ({ settings, updateSettings }: SettingsProps) => {
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Horário de Fechamento</label>
+                <label className="text-sm font-medium text-gray-700">Fechamento</label>
                 <Input
                   type="time"
                   value={formData.horario_fim}
@@ -288,8 +306,50 @@ export const Settings = ({ settings, updateSettings }: SettingsProps) => {
                 ))}
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Informações de Contato */}
+        <Card className="nova-card animate-fade-in">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-gray-800 flex items-center">
+              <Phone className="w-5 h-5 mr-2" />
+              Informações de Contato
+            </CardTitle>
+            <p className="text-sm text-gray-600">Aparecem na página inicial pública</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Telefone</label>
+              <Input
+                value={formData.telefone_contato}
+                onChange={(e) => setFormData(prev => ({ ...prev, telefone_contato: e.target.value }))}
+                placeholder="(11) 99999-9999"
+              />
+            </div>
             
-            <div className="space-y-3">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">WhatsApp</label>
+              <Input
+                value={formData.whatsapp_contato}
+                onChange={(e) => setFormData(prev => ({ ...prev, whatsapp_contato: e.target.value }))}
+                placeholder="(11) 99999-9999"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 flex items-center">
+                <MapPin className="w-4 h-4 mr-1" />
+                Endereço
+              </label>
+              <Input
+                value={formData.endereco_contato}
+                onChange={(e) => setFormData(prev => ({ ...prev, endereco_contato: e.target.value }))}
+                placeholder="Rua das Flores, 123 - Centro"
+              />
+            </div>
+
+            <div className="space-y-3 pt-4 border-t">
               <div className="flex items-center justify-between">
                 <div>
                   <label className="text-sm font-medium text-gray-700">Notificações Automáticas</label>
@@ -320,69 +380,7 @@ export const Settings = ({ settings, updateSettings }: SettingsProps) => {
             </div>
           </CardContent>
         </Card>
-
-        {/* Informações de Contato */}
-        <Card className="nova-card animate-fade-in lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-800 flex items-center">
-              <Phone className="w-5 h-5 mr-2" />
-              Informações de Contato (Páginas Públicas)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Telefone</label>
-              <Input
-                value={formData.telefone_contato}
-                onChange={(e) => setFormData(prev => ({ ...prev, telefone_contato: e.target.value }))}
-                placeholder="(11) 99999-9999"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">WhatsApp</label>
-              <Input
-                value={formData.whatsapp_contato}
-                onChange={(e) => setFormData(prev => ({ ...prev, whatsapp_contato: e.target.value }))}
-                placeholder="(11) 99999-9999"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 flex items-center">
-                <MapPin className="w-4 h-4 mr-1" />
-                Endereço
-              </label>
-              <Input
-                value={formData.endereco_contato}
-                onChange={(e) => setFormData(prev => ({ ...prev, endereco_contato: e.target.value }))}
-                placeholder="Rua das Flores, 123 - Centro"
-              />
-            </div>
-          </CardContent>
-        </Card>
       </div>
-
-      {/* Status da Integração */}
-      <Card className="nova-card animate-fade-in">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-800">
-            Status da Integração
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm text-green-700 font-medium">Conectado ao Supabase</span>
-            </div>
-            <p className="text-sm text-green-700">
-              O CRM está totalmente integrado ao banco de dados. Todas as configurações 
-              são salvas automaticamente e sincronizadas em tempo real nas páginas públicas.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

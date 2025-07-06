@@ -136,6 +136,7 @@ export type Database = {
           created_at: string | null
           dias_funcionamento: number[] | null
           duracao_padrao_agendamento: number | null
+          endereco_contato: string | null
           horario_fim: string | null
           horario_inicio: string | null
           id: string
@@ -146,14 +147,17 @@ export type Database = {
           nome_clinica: string | null
           notificacoes_ativadas: boolean | null
           subtitulo_pagina: string | null
+          telefone_contato: string | null
           titulo_pagina: string | null
           updated_at: string | null
+          whatsapp_contato: string | null
         }
         Insert: {
           cor_primaria?: string | null
           created_at?: string | null
           dias_funcionamento?: number[] | null
           duracao_padrao_agendamento?: number | null
+          endereco_contato?: string | null
           horario_fim?: string | null
           horario_inicio?: string | null
           id?: string
@@ -164,14 +168,17 @@ export type Database = {
           nome_clinica?: string | null
           notificacoes_ativadas?: boolean | null
           subtitulo_pagina?: string | null
+          telefone_contato?: string | null
           titulo_pagina?: string | null
           updated_at?: string | null
+          whatsapp_contato?: string | null
         }
         Update: {
           cor_primaria?: string | null
           created_at?: string | null
           dias_funcionamento?: number[] | null
           duracao_padrao_agendamento?: number | null
+          endereco_contato?: string | null
           horario_fim?: string | null
           horario_inicio?: string | null
           id?: string
@@ -182,8 +189,10 @@ export type Database = {
           nome_clinica?: string | null
           notificacoes_ativadas?: boolean | null
           subtitulo_pagina?: string | null
+          telefone_contato?: string | null
           titulo_pagina?: string | null
           updated_at?: string | null
+          whatsapp_contato?: string | null
         }
         Relationships: []
       }

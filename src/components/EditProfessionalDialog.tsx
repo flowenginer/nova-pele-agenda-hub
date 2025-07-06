@@ -1,239 +1,322 @@
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Edit, Upload, User } from 'lucide-react';
-import { Professional } from '../types/crm';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { X, Plus, Upload, User } from 'lucide-react';
+import type { DatabaseProfessional } from '../types/supabase';
 
 interface EditProfessionalDialogProps {
-  professional: Professional;
-  onUpdate: (id: string, updates: Partial<Professional>) => void;
+  professional: DatabaseProfessional | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (id: number, data: Partial<DatabaseProfessional>) => Promise<any> | 
+          ((data: Omit<DatabaseProfessional, 'id' | 'created_at' | 'updated_at'>) => Promise<any>);
 }
 
-export const EditProfessionalDialog = ({ professional, onUpdate }: EditProfessionalDialogProps) => {
-  const [open, setOpen] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const { toast } = useToast();
+export const EditProfessionalDialog = ({ 
+  professional, 
+  isOpen, 
+  onClose, 
+  onSave 
+}: EditProfessionalDialogProps) => {
   const [formData, setFormData] = useState({
-    name: professional.name,
-    email: professional.email || '',
-    phone: professional.phone || '',
-    specialties: professional.specialties.join(', '),
-    workingHours: professional.workingHours,
-    avatar: professional.avatar || ''
+    nome: '',
+    email: '',
+    telefone: '',
+    especialidade: '',
+    especialidades: [] as string[],
+    horario_inicio: '08:00',
+    horario_fim: '18:00',
+    dias_trabalho: [1, 2, 3, 4, 5] as number[],
+    ativo: true,
+    photo_url: ''
   });
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      setUploading(true);
-      
-      if (!event.target.files || event.target.files.length === 0) {
-        return;
-      }
+  const [newEspecialidade, setNewEspecialidade] = useState('');
+  const [loading, setLoading] = useState(false);
 
-      const file = event.target.files[0];
-      
-      // Validar tipo de arquivo
-      if (!file.type.startsWith('image/')) {
-        toast({
-          title: "Erro",
-          description: "Por favor, selecione apenas arquivos de imagem.",
-          variant: "destructive",
-        });
-        return;
-      }
+  const weekDays = [
+    { id: 0, name: 'Domingo' },
+    { id: 1, name: 'Segunda-feira' },
+    { id: 2, name: 'Terça-feira' },
+    { id: 3, name: 'Quarta-feira' },
+    { id: 4, name: 'Quinta-feira' },
+    { id: 5, name: 'Sexta-feira' },
+    { id: 6, name: 'Sábado' }
+  ];
 
-      // Validar tamanho do arquivo (5MB máximo)
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "Erro",
-          description: "A imagem deve ter no máximo 5MB.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const fileExt = file.name.split('.').pop();
-      const fileName = `professional-${professional.id}-${Date.now()}.${fileExt}`;
-
-      console.log('Iniciando upload da foto...');
-
-      const { error: uploadError, data } = await supabase.storage
-        .from('profile-photos')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) {
-        console.error('Erro no upload:', uploadError);
-        throw uploadError;
-      }
-
-      console.log('Upload realizado com sucesso:', data);
-
-      const { data: publicUrlData } = supabase.storage
-        .from('profile-photos')
-        .getPublicUrl(fileName);
-
-      console.log('URL pública gerada:', publicUrlData.publicUrl);
-
-      setFormData(prev => ({ ...prev, avatar: publicUrlData.publicUrl }));
-      
-      toast({
-        title: "Sucesso",
-        description: "Foto enviada com sucesso!",
+  useEffect(() => {
+    if (professional) {
+      setFormData({
+        nome: professional.nome || '',
+        email: professional.email || '',
+        telefone: professional.telefone || '',
+        especialidade: professional.especialidade || '',
+        especialidades: professional.especialidades || [],
+        horario_inicio: professional.horario_inicio || '08:00',
+        horario_fim: professional.horario_fim || '18:00',
+        dias_trabalho: professional.dias_trabalho || [1, 2, 3, 4, 5],
+        ativo: professional.ativo ?? true,
+        photo_url: professional.photo_url || ''
       });
-    } catch (error: any) {
-      console.error('Erro no upload:', error);
-      toast({
-        title: "Erro no upload",
-        description: error.message || "Não foi possível enviar a foto.",
-        variant: "destructive",
+    } else {
+      setFormData({
+        nome: '',
+        email: '',
+        telefone: '',
+        especialidade: '',
+        especialidades: [],
+        horario_inicio: '08:00',
+        horario_fim: '18:00',
+        dias_trabalho: [1, 2, 3, 4, 5],
+        ativo: true,
+        photo_url: ''
       });
-    } finally {
-      setUploading(false);
+    }
+  }, [professional]);
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setFormData(prev => ({ 
+          ...prev, 
+          photo_url: e.target?.result as string 
+        }));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const updates = {
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      specialties: formData.specialties.split(',').map(s => s.trim()).filter(s => s),
-      workingHours: formData.workingHours,
-      avatar: formData.avatar
-    };
+  const addEspecialidade = () => {
+    if (newEspecialidade.trim() && !formData.especialidades.includes(newEspecialidade.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        especialidades: [...prev.especialidades, newEspecialidade.trim()]
+      }));
+      setNewEspecialidade('');
+    }
+  };
 
-    onUpdate(professional.id, updates);
-    setOpen(false);
-    
-    toast({
-      title: "Sucesso",
-      description: "Profissional atualizado com sucesso!",
-    });
+  const removeEspecialidade = (especialidade: string) => {
+    setFormData(prev => ({
+      ...prev,
+      especialidades: prev.especialidades.filter(e => e !== especialidade)
+    }));
+  };
+
+  const toggleWorkingDay = (dayId: number) => {
+    setFormData(prev => ({
+      ...prev,
+      dias_trabalho: prev.dias_trabalho.includes(dayId)
+        ? prev.dias_trabalho.filter(d => d !== dayId)
+        : [...prev.dias_trabalho, dayId]
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (professional) {
+        await onSave(professional.id, formData);
+      } else {
+        await (onSave as any)(formData);
+      }
+      onClose();
+    } catch (error) {
+      console.error('Erro ao salvar profissional:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Edit className="w-4 h-4 mr-2" />
-          Editar
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Editar Profissional</DialogTitle>
+          <DialogTitle>
+            {professional ? 'Editar Profissional' : 'Novo Profissional'}
+          </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex flex-col items-center space-y-4">
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Foto do Profissional */}
+          <div className="flex items-center space-x-4">
             <Avatar className="w-20 h-20">
-              <AvatarImage src={formData.avatar} alt={formData.name} />
-              <AvatarFallback>
+              <AvatarImage src={formData.photo_url} alt={formData.nome} />
+              <AvatarFallback className="bg-nova-pink-100 text-nova-pink-600">
                 <User className="w-8 h-8" />
               </AvatarFallback>
             </Avatar>
-            
-            <div className="flex flex-col space-y-2">
-              <Label htmlFor="photo-upload" className="cursor-pointer">
-                <div className="flex items-center space-x-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 rounded-md transition-colors">
-                  <Upload className="w-4 h-4" />
-                  <span>{uploading ? 'Enviando...' : 'Escolher Foto'}</span>
-                </div>
-              </Label>
-              <Input
-                id="photo-upload"
+            <div>
+              <input
                 type="file"
                 accept="image/*"
-                onChange={handleFileUpload}
-                disabled={uploading}
+                onChange={handlePhotoUpload}
                 className="hidden"
+                id="photo-upload"
+              />
+              <Button 
+                type="button"
+                variant="outline" 
+                asChild
+                className="cursor-pointer"
+              >
+                <label htmlFor="photo-upload">
+                  <Upload className="w-4 h-4 mr-2" />
+                  {formData.photo_url ? 'Trocar Foto' : 'Adicionar Foto'}
+                </label>
+              </Button>
+            </div>
+          </div>
+
+          {/* Informações Básicas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="nome">Nome *</Label>
+              <Input
+                id="nome"
+                value={formData.nome}
+                onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="telefone">Telefone</Label>
+              <Input
+                id="telefone"
+                value={formData.telefone}
+                onChange={(e) => setFormData(prev => ({ ...prev, telefone: e.target.value }))}
+                placeholder="(11) 99999-9999"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="especialidade">Especialidade Principal</Label>
+              <Input
+                id="especialidade"
+                value={formData.especialidade}
+                onChange={(e) => setFormData(prev => ({ ...prev, especialidade: e.target.value }))}
+                placeholder="Ex: Estética Facial"
               />
             </div>
           </div>
-          
+
+          {/* Especialidades Adicionais */}
           <div className="space-y-2">
-            <Label htmlFor="name">Nome</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              required
-            />
+            <Label>Especialidades Adicionais</Label>
+            <div className="flex space-x-2">
+              <Input
+                value={newEspecialidade}
+                onChange={(e) => setNewEspecialidade(e.target.value)}
+                placeholder="Digite uma especialidade"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addEspecialidade();
+                  }
+                }}
+              />
+              <Button type="button" onClick={addEspecialidade} variant="outline">
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {formData.especialidades.map((esp, index) => (
+                <Badge key={index} variant="secondary" className="flex items-center space-x-1">
+                  <span>{esp}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeEspecialidade(esp)}
+                    className="ml-1 hover:bg-red-100 rounded-full p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="phone">Telefone</Label>
-            <Input
-              id="phone"
-              value={formData.phone}
-              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="specialties">Especialidades</Label>
-            <Input
-              id="specialties"
-              value={formData.specialties}
-              onChange={(e) => setFormData(prev => ({ ...prev, specialties: e.target.value }))}
-              placeholder="Facial, Limpeza de Pele, Peeling"
-            />
-            <p className="text-xs text-gray-500">Separe as especialidades por vírgula</p>
-          </div>
-          
+
+          {/* Horários de Trabalho */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="start-time">Horário Início</Label>
+              <Label htmlFor="horario_inicio">Horário de Início</Label>
               <Input
-                id="start-time"
+                id="horario_inicio"
                 type="time"
-                value={formData.workingHours.start}
-                onChange={(e) => setFormData(prev => ({ 
-                  ...prev, 
-                  workingHours: { ...prev.workingHours, start: e.target.value }
-                }))}
+                value={formData.horario_inicio}
+                onChange={(e) => setFormData(prev => ({ ...prev, horario_inicio: e.target.value }))}
               />
             </div>
-            
+
             <div className="space-y-2">
-              <Label htmlFor="end-time">Horário Fim</Label>
+              <Label htmlFor="horario_fim">Horário de Fim</Label>
               <Input
-                id="end-time"
+                id="horario_fim"
                 type="time"
-                value={formData.workingHours.end}
-                onChange={(e) => setFormData(prev => ({ 
-                  ...prev, 
-                  workingHours: { ...prev.workingHours, end: e.target.value }
-                }))}
+                value={formData.horario_fim}
+                onChange={(e) => setFormData(prev => ({ ...prev, horario_fim: e.target.value }))}
               />
             </div>
           </div>
-          
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+
+          {/* Dias de Trabalho */}
+          <div className="space-y-2">
+            <Label>Dias de Trabalho</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {weekDays.map(day => (
+                <div key={day.id} className="flex items-center justify-between p-2 border rounded">
+                  <span className="text-sm">{day.name}</span>
+                  <Switch
+                    checked={formData.dias_trabalho.includes(day.id)}
+                    onCheckedChange={() => toggleWorkingDay(day.id)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Status Ativo */}
+          <div className="flex items-center justify-between p-4 border rounded">
+            <div>
+              <Label className="text-base">Profissional Ativo</Label>
+              <p className="text-sm text-gray-600">
+                Quando ativo, o profissional aparece disponível para agendamentos
+              </p>
+            </div>
+            <Switch
+              checked={formData.ativo}
+              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, ativo: checked }))}
+            />
+          </div>
+
+          {/* Botões */}
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={uploading}>
-              Salvar Alterações
+            <Button type="submit" disabled={loading} className="nova-button">
+              {loading ? 'Salvando...' : 'Salvar'}
             </Button>
           </div>
         </form>

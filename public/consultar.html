@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -22,8 +23,13 @@
             nome_clinica: 'Nova Pele Estética',
             logo_url: '',
             titulo_pagina: 'Nova Pele Estética',
-            cor_primaria: '#ec4899'
+            cor_primaria: '#ec4899',
+            telefone_contato: '',
+            whatsapp_contato: '',
+            endereco_contato: ''
         };
+
+        let appointments = [];
 
         // Carregar configurações
         async function loadSystemSettings() {
@@ -36,8 +42,8 @@
 
                 if (data) {
                     systemSettings = { ...systemSettings, ...data };
-                    updatePageWithSettings();
                 }
+                updatePageWithSettings();
             } catch (error) {
                 console.log('Usando configurações padrão');
                 updatePageWithSettings();
@@ -72,28 +78,31 @@
 
             const pageTitle = document.getElementById('page-title');
             if (pageTitle) {
-                pageTitle.textContent = `${systemSettings.nome_clinica || 'Nova Pele Estética'} - Consultar`;
+                pageTitle.textContent = `${systemSettings.nome_clinica || 'Nova Pele Estética'}`;
             }
         }
-
-        let appointments = [];
 
         async function fetchAppointments() {
             const userId = urlParams.get('user');
             if (!userId) {
-                alert('Usuário não especificado.');
+                showMessage('Usuário não especificado.', 'error');
                 return;
             }
 
             try {
                 const { data, error } = await supabaseClient
                     .from('agendamentos')
-                    .select('*')
-                    .eq('cliente_id', userId);
+                    .select(`
+                        *,
+                        servicos!inner(nome, preco),
+                        profissionais!inner(nome)
+                    `)
+                    .eq('cliente_id', userId)
+                    .order('data_agendamento', { ascending: false });
 
                 if (error) {
                     console.error('Erro ao buscar agendamentos:', error);
-                    alert('Erro ao buscar agendamentos.');
+                    showMessage('Erro ao buscar agendamentos.', 'error');
                     return;
                 }
 
@@ -101,7 +110,7 @@
                 displayAppointments();
             } catch (error) {
                 console.error('Erro inesperado:', error);
-                alert('Erro inesperado ao buscar agendamentos.');
+                showMessage('Erro inesperado ao buscar agendamentos.', 'error');
             }
         }
 
@@ -109,25 +118,72 @@
             const appointmentsDiv = document.getElementById('appointments');
             if (!appointmentsDiv) return;
 
-            appointmentsDiv.innerHTML = ''; // Limpa os agendamentos anteriores
+            appointmentsDiv.innerHTML = '';
 
             if (appointments.length === 0) {
-                appointmentsDiv.innerHTML = '<p>Nenhum agendamento encontrado.</p>';
+                appointmentsDiv.innerHTML = `
+                    <div class="bg-gray-50 p-8 rounded-lg text-center">
+                        <i class="fas fa-calendar-times text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-600">Nenhum agendamento encontrado.</p>
+                    </div>
+                `;
                 return;
             }
 
             appointments.forEach(appointment => {
+                const appointmentDate = new Date(appointment.data_agendamento + 'T00:00:00');
+                const formattedDate = appointmentDate.toLocaleDateString('pt-BR');
+                const statusColors = {
+                    'confirmado': 'bg-green-100 text-green-800',
+                    'pendente': 'bg-yellow-100 text-yellow-800',
+                    'cancelado': 'bg-red-100 text-red-800',
+                    'concluido': 'bg-blue-100 text-blue-800'
+                };
+
                 const div = document.createElement('div');
-                div.className = 'bg-white p-4 rounded-md shadow-sm mb-4';
+                div.className = 'bg-white p-6 rounded-lg shadow-sm border mb-4 hover:shadow-md transition-shadow';
 
                 div.innerHTML = `
-                    <h3 class="font-semibold text-lg">Agendamento para ${appointment.data_agendamento} às ${appointment.hora_agendamento}</h3>
-                    <p>Serviço: ${appointment.servico_id}</p>
-                    <p>Status: ${appointment.status}</p>
-                    <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-2"
-                            onclick="cancelAppointment(${appointment.id})">
-                        Cancelar Agendamento
-                    </button>
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="font-semibold text-lg text-gray-800">
+                            <i class="fas fa-calendar-alt mr-2 text-primary-600"></i>
+                            ${formattedDate} às ${appointment.hora_agendamento}
+                        </h3>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium ${statusColors[appointment.status] || 'bg-gray-100 text-gray-800'}">
+                            ${appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                        </span>
+                    </div>
+                    
+                    <div class="space-y-2 mb-4">
+                        <p class="text-gray-600">
+                            <i class="fas fa-spa mr-2"></i>
+                            <strong>Serviço:</strong> ${appointment.servicos?.nome || 'Não especificado'}
+                        </p>
+                        <p class="text-gray-600">
+                            <i class="fas fa-user-md mr-2"></i>
+                            <strong>Profissional:</strong> ${appointment.profissionais?.nome || 'Não especificado'}
+                        </p>
+                        ${appointment.servicos?.preco ? `
+                            <p class="text-gray-600">
+                                <i class="fas fa-dollar-sign mr-2"></i>
+                                <strong>Valor:</strong> R$ ${parseFloat(appointment.servicos.preco).toFixed(2)}
+                            </p>
+                        ` : ''}
+                        ${appointment.observacoes ? `
+                            <p class="text-gray-600">
+                                <i class="fas fa-comment mr-2"></i>
+                                <strong>Observações:</strong> ${appointment.observacoes}
+                            </p>
+                        ` : ''}
+                    </div>
+                    
+                    ${appointment.status === 'confirmado' || appointment.status === 'pendente' ? `
+                        <button class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center"
+                                onclick="cancelAppointment(${appointment.id})">
+                            <i class="fas fa-times mr-2"></i>
+                            Cancelar Agendamento
+                        </button>
+                    ` : ''}
                 `;
                 appointmentsDiv.appendChild(div);
             });
@@ -136,24 +192,43 @@
         async function cancelAppointment(appointmentId) {
             if (confirm('Tem certeza de que deseja cancelar este agendamento?')) {
                 try {
-                    const { data, error } = await supabaseClient
+                    const { error } = await supabaseClient
                         .from('agendamentos')
-                        .delete()
+                        .update({ status: 'cancelado' })
                         .eq('id', appointmentId);
 
                     if (error) {
                         console.error('Erro ao cancelar agendamento:', error);
-                        alert('Erro ao cancelar agendamento.');
+                        showMessage('Erro ao cancelar agendamento.', 'error');
                         return;
                     }
 
-                    alert('Agendamento cancelado com sucesso.');
-                    fetchAppointments(); // Atualiza a lista de agendamentos
+                    showMessage('Agendamento cancelado com sucesso.', 'success');
+                    fetchAppointments();
                 } catch (error) {
                     console.error('Erro inesperado:', error);
-                    alert('Erro inesperado ao cancelar agendamento.');
+                    showMessage('Erro inesperado ao cancelar agendamento.', 'error');
                 }
             }
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            if (!messageDiv) return;
+
+            const bgColor = type === 'success' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200';
+            const icon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle';
+
+            messageDiv.innerHTML = `
+                <div class="p-4 rounded-lg border ${bgColor} flex items-center">
+                    <i class="${icon} mr-2"></i>
+                    ${message}
+                </div>
+            `;
+
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 5000);
         }
 
         // Verificar USER_ID e carregar página
@@ -162,6 +237,7 @@
                 document.body.innerHTML = `
                     <div class="min-h-screen flex items-center justify-center bg-gray-50">
                         <div class="text-center p-8">
+                            <i class="fas fa-exclamation-triangle text-6xl text-yellow-500 mb-6"></i>
                             <h1 class="text-2xl font-bold text-gray-800 mb-4">Link Inválido</h1>
                             <p class="text-gray-600">Entre em contato com o estabelecimento para obter um link válido.</p>
                         </div>
@@ -169,6 +245,7 @@
                 `;
             } else {
                 loadSystemSettings();
+                fetchAppointments();
             }
         });
     </script>
@@ -186,15 +263,15 @@
     </style>
 </head>
 <body class="bg-gray-50">
-    <div class="max-w-2xl mx-auto bg-white min-h-screen shadow-sm">
+    <div class="max-w-4xl mx-auto bg-white min-h-screen shadow-sm">
         <!-- Header -->
         <header class="gradient-bg text-white p-6">
             <div class="flex items-center justify-center space-x-4">
-                <div id="logo-container" class="w-16 h-16 rounded-full bg-white flex items-center justify-center overflow-hidden">
-                    <span class="text-gray-800 font-bold text-2xl">N</span>
+                <div id="logo-container" class="w-16 h-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center overflow-hidden">
+                    <span class="text-white font-bold text-2xl">N</span>
                 </div>
                 <div class="text-center">
-                    <h1 id="page-title" class="text-2xl font-bold">Nova Pele Estética - Consultar</h1>
+                    <h1 id="page-title" class="text-2xl font-bold">Nova Pele Estética</h1>
                     <p class="opacity-90">Consulte seus agendamentos</p>
                 </div>
             </div>
@@ -202,13 +279,25 @@
 
         <!-- Main Content -->
         <main class="p-8">
-            <h2 class="text-xl font-semibold mb-4">Seus Agendamentos</h2>
-            <div id="appointments">
-                <!-- Agendamentos serão exibidos aqui -->
+            <div id="message" class="mb-6"></div>
+            
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-semibold text-gray-800">
+                    <i class="fas fa-list mr-2"></i>
+                    Seus Agendamentos
+                </h2>
+                <button onclick="fetchAppointments()" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Atualizar
+                </button>
             </div>
-            <button onclick="fetchAppointments()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Carregar Agendamentos
-            </button>
+            
+            <div id="appointments">
+                <div class="bg-gray-50 p-8 rounded-lg text-center">
+                    <i class="fas fa-spinner fa-spin text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600">Carregando agendamentos...</p>
+                </div>
+            </div>
         </main>
     </div>
 </body>
