@@ -51,7 +51,7 @@
         // Configurações do sistema
         let systemSettings = {
             nome_clinica: 'Nova Pele Estética',
-            logo_url: 'https://flvkbiwftlonwlzextmx.supabase.co/storage/v1/object/public/profile-photos//ChatGPT%20Image%209%20de%20jun.%20de%202025,%2012_41_57.png',
+            logo_url: '',
             titulo_pagina: 'Nova Pele Estética',
             subtitulo_pagina: 'Cuidando melhor de você',
             mensagem_boas_vindas: 'Bem-vinda à Nova Pele Estética! Agende seu horário online e transforme sua beleza com nossos tratamentos especializados.'
@@ -60,6 +60,7 @@
         // Carregar configurações do sistema
         async function loadSystemSettings() {
             try {
+                console.log('Carregando configurações do sistema...');
                 const { data, error } = await supabaseClient
                     .from('configuracoes_sistema')
                     .select('*')
@@ -67,23 +68,38 @@
                     .single();
 
                 if (data) {
+                    console.log('Configurações carregadas:', data);
                     systemSettings = data;
+                    updatePageWithSettings();
+                } else {
+                    console.log('Nenhuma configuração encontrada, usando padrões');
                     updatePageWithSettings();
                 }
             } catch (error) {
-                console.log('Usando configurações padrão');
+                console.log('Erro ao carregar configurações, usando padrões:', error);
+                updatePageWithSettings();
             }
         }
 
         // Atualizar página com configurações
         function updatePageWithSettings() {
-            document.title = `${systemSettings.titulo_pagina} - Agendamento Online`;
+            console.log('Atualizando página com configurações:', systemSettings);
+            
+            document.title = `${systemSettings.titulo_pagina || systemSettings.nome_clinica} - Agendamento Online`;
             
             // Atualizar logo
             const logoImg = document.getElementById('clinic-logo');
-            if (logoImg && systemSettings.logo_url) {
-                logoImg.src = systemSettings.logo_url;
-                logoImg.alt = systemSettings.nome_clinica;
+            if (logoImg) {
+                if (systemSettings.logo_url) {
+                    logoImg.src = systemSettings.logo_url;
+                    logoImg.style.display = 'block';
+                } else {
+                    logoImg.style.display = 'none';
+                    // Mostrar inicial da clínica
+                    const logoContainer = logoImg.parentElement;
+                    logoContainer.innerHTML = `<span class="text-white font-bold text-2xl">${(systemSettings.nome_clinica || 'N').charAt(0)}</span>`;
+                }
+                logoImg.alt = systemSettings.nome_clinica || 'Logo';
             }
 
             // Atualizar nome da clínica
@@ -113,6 +129,8 @@
 
         // Verificar se USER_ID existe ao carregar a página
         window.addEventListener('DOMContentLoaded', function() {
+            console.log('Página carregada, USER_ID:', USER_ID);
+            
             if (!USER_ID) {
                 document.body.innerHTML = `
                     <div class="min-h-screen flex items-center justify-center bg-gray-50">
@@ -166,8 +184,9 @@
         <header class="relative overflow-hidden">
             <div class="gradient-bg text-white p-8 pb-12">
                 <div class="text-center fade-in">
-                    <div class="w-24 h-24 rounded-full bg-white mx-auto mb-4 overflow-hidden shadow-lg float">
-                        <img id="clinic-logo" src="https://flvkbiwftlonwlzextmx.supabase.co/storage/v1/object/public/profile-photos//ChatGPT%20Image%209%20de%20jun.%20de%202025,%2012_41_57.png" alt="Nova Pele Estética" class="w-full h-full object-cover">
+                    <div class="w-24 h-24 rounded-full bg-white mx-auto mb-4 overflow-hidden shadow-lg float flex items-center justify-center">
+                        <img id="clinic-logo" src="" alt="Logo" class="w-full h-full object-cover" style="display: none;">
+                        <span class="text-gray-800 font-bold text-2xl">N</span>
                     </div>
                     <h1 id="clinic-name" class="text-3xl font-bold mb-2">Nova Pele Estética</h1>
                     <p id="clinic-subtitle" class="text-lg opacity-90">Cuidando melhor de você!</p>

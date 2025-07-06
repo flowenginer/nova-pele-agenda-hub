@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabaseCRM } from '@/hooks/useSupabaseCRM';
 import { LoginForm } from '@/components/Auth/LoginForm';
@@ -274,9 +275,9 @@ const Index = () => {
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">
-                  Bem-vindo, {user.email}!
+                  Bem-vindo, {crmData.settings?.nome_clinica || 'Nova Pele Estética'}!
                 </h1>
-                <p className="text-gray-600">Sistema de Gestão Nova Pele Estética</p>
+                <p className="text-gray-600">Sistema de Gestão</p>
               </div>
               <Button
                 variant="outline"
