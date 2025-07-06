@@ -22,6 +22,61 @@
             alert('Link inválido. Entre em contato com o estabelecimento.');
             window.location.href = 'index.html';
         }
+
+        // Configurações do sistema
+        let systemSettings = {
+            nome_clinica: 'Nova Pele Estética',
+            logo_url: 'https://flvkbiwftlonwlzextmx.supabase.co/storage/v1/object/public/profile-photos//ChatGPT%20Image%209%20de%20jun.%20de%202025,%2012_41_57.png',
+            titulo_pagina: 'Nova Pele Estética',
+            subtitulo_pagina: 'Consulte seus agendamentos'
+        };
+
+        // Carregar configurações do sistema
+        async function loadSystemSettings() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('configuracoes_sistema')
+                    .select('*')
+                    .limit(1)
+                    .single();
+
+                if (data) {
+                    systemSettings = data;
+                    updatePageWithSettings();
+                }
+            } catch (error) {
+                console.log('Usando configurações padrão');
+            }
+        }
+
+        // Atualizar página com configurações
+        function updatePageWithSettings() {
+            document.title = `Consultar Agendamento - ${systemSettings.nome_clinica}`;
+            
+            // Atualizar logo
+            const logoImg = document.getElementById('clinic-logo');
+            if (logoImg && systemSettings.logo_url) {
+                logoImg.src = systemSettings.logo_url;
+                logoImg.alt = systemSettings.nome_clinica;
+            }
+
+            // Atualizar nome da clínica
+            const clinicName = document.getElementById('clinic-name');
+            if (clinicName) {
+                clinicName.textContent = systemSettings.nome_clinica || 'Nova Pele Estética';
+            }
+
+            // Atualizar subtítulo
+            const clinicSubtitle = document.getElementById('clinic-subtitle');
+            if (clinicSubtitle) {
+                clinicSubtitle.textContent = 'Consulte seus agendamentos';
+            }
+        }
+
+        // Carregar configurações quando a página carregar
+        window.addEventListener('DOMContentLoaded', function() {
+            loadSystemSettings();
+        });
     </script>
     <style>
         @keyframes fadeIn {
@@ -143,11 +198,11 @@
         <header class="relative overflow-hidden">
             <div class="gradient-bg text-white p-4 pb-6">
                 <div class="text-center fade-in">
-                    <div class="w-10 h-10 rounded-full bg-white mx-auto mb-2 overflow-hidden shadow-lg float">
-                        <img src="https://flvkbiwftlonwlzextmx.supabase.co/storage/v1/object/public/profile-photos//ChatGPT%20Image%209%20de%20jun.%20de%202025,%2012_41_57.png" alt="Nova Pele Estética" class="w-full h-full object-cover">
+                    <div class="w-12 h-12 rounded-full bg-white mx-auto mb-2 overflow-hidden shadow-lg float">
+                        <img id="clinic-logo" src="https://flvkbiwftlonwlzextmx.supabase.co/storage/v1/object/public/profile-photos//ChatGPT%20Image%209%20de%20jun.%20de%202025,%2012_41_57.png" alt="Nova Pele Estética" class="w-full h-full object-cover">
                     </div>
-                    <h1 class="text-lg font-bold mb-1">Nova Pele Estética</h1>
-                    <p class="text-xs opacity-90">Consulte seus agendamentos</p>
+                    <h1 id="clinic-name" class="text-lg font-bold mb-1">Nova Pele Estética</h1>
+                    <p id="clinic-subtitle" class="text-xs opacity-90">Consulte seus agendamentos</p>
                 </div>
                 
                 <!-- Decorative elements -->
@@ -189,7 +244,7 @@
 
         <!-- Footer -->
         <footer class="p-6 text-center text-gray-400 text-sm border-t border-gray-100 mt-8">
-            <p class="mb-2">© 2025 Nova Pele Estética. Todos os direitos reservados.</p>
+            <p class="mb-2">© 2025 <span id="footer-clinic-name">Nova Pele Estética</span>. Todos os direitos reservados.</p>
             <p class="space-x-3">
                 <a href="#" class="text-primary-600 hover:text-primary-700">Termos de uso</a>
                 <span>•</span>
@@ -538,6 +593,19 @@
         // Function to cancel reschedule
         cancelRescheduleButton.addEventListener("click", () => {
             rescheduleModal.classList.remove("active");
+        });
+
+        // Atualizar nome da clínica no rodapé
+        function updateFooterClinicName() {
+            const footerClinicName = document.getElementById('footer-clinic-name');
+            if (footerClinicName && systemSettings.nome_clinica) {
+                footerClinicName.textContent = systemSettings.nome_clinica;
+            }
+        }
+
+        // Chamar função para atualizar rodapé quando as configurações carregarem
+        window.addEventListener('DOMContentLoaded', function() {
+            setTimeout(updateFooterClinicName, 1000);
         });
     </script>
 </body>

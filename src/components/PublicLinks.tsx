@@ -12,7 +12,7 @@ export const PublicLinks = () => {
   const { toast } = useToast();
   const [copied, setCopied] = useState('');
 
-  // Gerar URLs com o user ID
+  // Gerar URLs com o user ID - usando o domínio atual
   const baseUrl = window.location.origin;
   const agendamentoUrl = `${baseUrl}/agendamento.html?user=${user?.id}`;
   const consultarUrl = `${baseUrl}/consultar.html?user=${user?.id}`;

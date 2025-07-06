@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -22,6 +21,61 @@
             alert('Link inválido. Entre em contato com o estabelecimento.');
             window.location.href = 'index.html';
         }
+
+        // Configurações do sistema
+        let systemSettings = {
+            nome_clinica: 'Nova Pele Estética',
+            logo_url: 'https://flvkbiwftlonwlzextmx.supabase.co/storage/v1/object/public/profile-photos//ChatGPT%20Image%209%20de%20jun.%20de%202025,%2012_41_57.png',
+            titulo_pagina: 'Nova Pele Estética',
+            subtitulo_pagina: 'Cuidando melhor de você'
+        };
+
+        // Carregar configurações do sistema
+        async function loadSystemSettings() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('configuracoes_sistema')
+                    .select('*')
+                    .limit(1)
+                    .single();
+
+                if (data) {
+                    systemSettings = data;
+                    updatePageWithSettings();
+                }
+            } catch (error) {
+                console.log('Usando configurações padrão');
+            }
+        }
+
+        // Atualizar página com configurações
+        function updatePageWithSettings() {
+            document.title = `Agendar Horário - ${systemSettings.nome_clinica}`;
+            
+            // Atualizar logo
+            const logoImg = document.getElementById('clinic-logo');
+            if (logoImg && systemSettings.logo_url) {
+                logoImg.src = systemSettings.logo_url;
+                logoImg.alt = systemSettings.nome_clinica;
+            }
+
+            // Atualizar nome da clínica
+            const clinicName = document.getElementById('clinic-name');
+            if (clinicName) {
+                clinicName.textContent = systemSettings.nome_clinica || 'Nova Pele Estética';
+            }
+
+            // Atualizar subtítulo
+            const clinicSubtitle = document.getElementById('clinic-subtitle');
+            if (clinicSubtitle) {
+                clinicSubtitle.textContent = systemSettings.subtitulo_pagina || 'Agende seu horário online';
+            }
+        }
+
+        // Carregar configurações quando a página carregar
+        window.addEventListener('DOMContentLoaded', function() {
+            loadSystemSettings();
+        });
     </script>
     <style>
         @keyframes fadeIn {
@@ -56,10 +110,10 @@
             <div class="gradient-bg text-white p-6 pb-8">
                 <div class="text-center fade-in">
                     <div class="w-16 h-16 rounded-full bg-white mx-auto mb-3 overflow-hidden shadow-lg">
-                        <img src="https://flvkbiwftlonwlzextmx.supabase.co/storage/v1/object/public/profile-photos//ChatGPT%20Image%209%20de%20jun.%20de%202025,%2012_41_57.png" alt="Nova Pele Estética" class="w-full h-full object-cover">
+                        <img id="clinic-logo" src="https://flvkbiwftlonwlzextmx.supabase.co/storage/v1/object/public/profile-photos//ChatGPT%20Image%209%20de%20jun.%20de%202025,%2012_41_57.png" alt="Nova Pele Estética" class="w-full h-full object-cover">
                     </div>
-                    <h1 class="text-2xl font-bold mb-1">Nova Pele Estética</h1>
-                    <p class="text-sm opacity-90">Agende seu horário online</p>
+                    <h1 id="clinic-name" class="text-2xl font-bold mb-1">Nova Pele Estética</h1>
+                    <p id="clinic-subtitle" class="text-sm opacity-90">Agende seu horário online</p>
                 </div>
             </div>
         </header>
@@ -165,25 +219,21 @@
     </div>
 
     <script>
-        // Variáveis globais para armazenar seleções
         let selectedService = null;
         let selectedProfessional = null;
         let selectedDate = null;
         let selectedTime = null;
 
-        // Elementos DOM
         const servicesContainer = document.getElementById('services-container');
         const professionalsContainer = document.getElementById('professionals-container');
         const datesContainer = document.getElementById('dates-container');
         const timesContainer = document.getElementById('times-container');
 
-        // Botões de navegação
         const nextToProfessional = document.getElementById('next-to-professional');
         const nextToDate = document.getElementById('next-to-date');
         const nextToTime = document.getElementById('next-to-time');
         const nextToClient = document.getElementById('next-to-client');
 
-        // Steps
         const stepServices = document.getElementById('step-services');
         const stepProfessionals = document.getElementById('step-professionals');
         const stepDate = document.getElementById('step-date');
@@ -191,7 +241,6 @@
         const stepClient = document.getElementById('step-client');
         const stepConfirmation = document.getElementById('step-confirmation');
 
-        // Carregar serviços ao inicializar
         loadServices();
 
         async function loadServices() {
@@ -242,14 +291,10 @@
         }
 
         function selectService(service, element) {
-            // Remove seleção anterior
             document.querySelectorAll('.service-item').forEach(item => item.classList.remove('selected'));
-            
-            // Adiciona seleção
             element.classList.add('selected');
             selectedService = service;
             
-            // Habilita botão
             nextToProfessional.disabled = false;
             nextToProfessional.className = 'w-full py-4 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white rounded-xl font-semibold transition';
         }
@@ -320,7 +365,6 @@
                 const date = new Date();
                 date.setDate(today.getDate() + i);
                 
-                // Verificar se o profissional trabalha neste dia da semana
                 const dayOfWeek = date.getDay();
                 const workingDays = selectedProfessional.dias_trabalho || [1, 2, 3, 4, 5];
                 
@@ -358,7 +402,6 @@
             
             try {
                 console.log('Carregando horários para:', selectedDate, selectedProfessional.id);
-                // Buscar horários ocupados
                 const { data: bookedTimes, error } = await supabaseClient
                     .from('agendamentos')
                     .select('hora_agendamento')
@@ -375,14 +418,12 @@
                 const bookedHours = bookedTimes.map(item => item.hora_agendamento);
                 const availableTimes = [];
                 
-                // Usar horários do profissional
                 const startHour = parseInt(selectedProfessional.horario_inicio?.split(':')[0] || '8');
                 const endHour = parseInt(selectedProfessional.horario_fim?.split(':')[0] || '18');
                 
-                // Gerar horários de 30 em 30 minutos
                 for (let hour = startHour; hour <= endHour; hour++) {
                     for (let minute = 0; minute < 60; minute += 30) {
-                        if (hour === endHour && minute > 0) break; // Não passar do horário final
+                        if (hour === endHour && minute > 0) break;
                         
                         const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
                         
@@ -529,11 +570,9 @@
 
                 console.log('Agendamento criado com sucesso:', data);
 
-                // Mostrar confirmação
                 stepClient.classList.add('hidden');
                 stepConfirmation.classList.remove('hidden');
                 
-                // Preencher resumo
                 document.getElementById('appointment-summary').innerHTML = `
                     <div class="space-y-2 text-left">
                         <p><strong>Serviço:</strong> ${selectedService.nome}</p>

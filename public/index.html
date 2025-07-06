@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nova Pele Estética - Agendamento Online</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script>
         tailwind.config = {
@@ -29,6 +30,11 @@
             }
         }
 
+        // Inicialização do cliente Supabase
+        const supabaseUrl = 'https://flvkbiwftlonwlzextmx.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsdmtiaXdmdGxvbndsemV4dG14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkyNDMyNzQsImV4cCI6MjA2NDgxOTI3NH0.owDvN4PQX9MAX2OHlbBgupsF7W5Whom7v4qDqDwzFj4';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
         // Capturar USER ID da URL
         const urlParams = new URLSearchParams(window.location.search);
         const USER_ID = urlParams.get('user');
@@ -39,6 +45,69 @@
                 window.location.href = `${page}?user=${USER_ID}`;
             } else {
                 alert('Link inválido. Entre em contato com o estabelecimento.');
+            }
+        }
+
+        // Configurações do sistema
+        let systemSettings = {
+            nome_clinica: 'Nova Pele Estética',
+            logo_url: 'https://flvkbiwftlonwlzextmx.supabase.co/storage/v1/object/public/profile-photos//ChatGPT%20Image%209%20de%20jun.%20de%202025,%2012_41_57.png',
+            titulo_pagina: 'Nova Pele Estética',
+            subtitulo_pagina: 'Cuidando melhor de você',
+            mensagem_boas_vindas: 'Bem-vinda à Nova Pele Estética! Agende seu horário online e transforme sua beleza com nossos tratamentos especializados.'
+        };
+
+        // Carregar configurações do sistema
+        async function loadSystemSettings() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('configuracoes_sistema')
+                    .select('*')
+                    .limit(1)
+                    .single();
+
+                if (data) {
+                    systemSettings = data;
+                    updatePageWithSettings();
+                }
+            } catch (error) {
+                console.log('Usando configurações padrão');
+            }
+        }
+
+        // Atualizar página com configurações
+        function updatePageWithSettings() {
+            document.title = `${systemSettings.titulo_pagina} - Agendamento Online`;
+            
+            // Atualizar logo
+            const logoImg = document.getElementById('clinic-logo');
+            if (logoImg && systemSettings.logo_url) {
+                logoImg.src = systemSettings.logo_url;
+                logoImg.alt = systemSettings.nome_clinica;
+            }
+
+            // Atualizar nome da clínica
+            const clinicName = document.getElementById('clinic-name');
+            if (clinicName) {
+                clinicName.textContent = systemSettings.nome_clinica || 'Nova Pele Estética';
+            }
+
+            // Atualizar subtítulo
+            const clinicSubtitle = document.getElementById('clinic-subtitle');
+            if (clinicSubtitle) {
+                clinicSubtitle.textContent = systemSettings.subtitulo_pagina || 'Cuidando melhor de você!';
+            }
+
+            // Atualizar mensagem de boas-vindas
+            const welcomeMessage = document.getElementById('welcome-message');
+            if (welcomeMessage) {
+                welcomeMessage.textContent = systemSettings.mensagem_boas_vindas || 'Bem-vinda à Nova Pele Estética! Agende seu horário online e transforme sua beleza com nossos tratamentos especializados.';
+            }
+
+            // Atualizar nome da clínica no rodapé
+            const footerClinicName = document.getElementById('footer-clinic-name');
+            if (footerClinicName) {
+                footerClinicName.textContent = systemSettings.nome_clinica || 'Nova Pele Estética';
             }
         }
 
@@ -53,6 +122,8 @@
                         </div>
                     </div>
                 `;
+            } else {
+                loadSystemSettings();
             }
         });
     </script>
@@ -96,11 +167,11 @@
             <div class="gradient-bg text-white p-8 pb-12">
                 <div class="text-center fade-in">
                     <div class="w-24 h-24 rounded-full bg-white mx-auto mb-4 overflow-hidden shadow-lg float">
-                        <img src="https://flvkbiwftlonwlzextmx.supabase.co/storage/v1/object/public/profile-photos//ChatGPT%20Image%209%20de%20jun.%20de%202025,%2012_41_57.png" alt="Nova Pele Estética" class="w-full h-full object-cover">
+                        <img id="clinic-logo" src="https://flvkbiwftlonwlzextmx.supabase.co/storage/v1/object/public/profile-photos//ChatGPT%20Image%209%20de%20jun.%20de%202025,%2012_41_57.png" alt="Nova Pele Estética" class="w-full h-full object-cover">
                     </div>
-                    <h1 class="text-3xl font-bold mb-2">Nova Pele Estética</h1>
-                    <p class="text-lg opacity-90">Cuidando melhor de você!</p>
-                    <p class="text-sm opacity-75 mt-2">Bem-vinda à Nova Pele Estética! Agende seu horário online e transforme sua beleza com nossos tratamentos especializados.</p>
+                    <h1 id="clinic-name" class="text-3xl font-bold mb-2">Nova Pele Estética</h1>
+                    <p id="clinic-subtitle" class="text-lg opacity-90">Cuidando melhor de você!</p>
+                    <p id="welcome-message" class="text-sm opacity-75 mt-2">Bem-vinda à Nova Pele Estética! Agende seu horário online e transforme sua beleza com nossos tratamentos especializados.</p>
                 </div>
                 
                 <!-- Decorative elements -->
@@ -226,7 +297,7 @@
 
         <!-- Footer -->
         <footer class="p-6 text-center text-gray-400 text-sm border-t border-gray-100 mt-8">
-            <p class="mb-2">© 2025 Nova Pele Estética. Todos os direitos reservados.</p>
+            <p class="mb-2">© 2025 <span id="footer-clinic-name">Nova Pele Estética</span>. Todos os direitos reservados.</p>
             <p class="space-x-3">
                 <a href="#" class="text-primary-600 hover:text-primary-700">Termos de uso</a>
                 <span>•</span>
