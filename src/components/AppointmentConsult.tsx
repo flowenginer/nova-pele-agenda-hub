@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,12 +10,11 @@ import { useToast } from '@/hooks/use-toast';
 
 export const AppointmentConsult = () => {
   const [searchPhone, setSearchPhone] = useState('');
-  const [searchName, setSearchName] = useState('');
+  const [searchEmail, setSearchEmail] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   
   const { appointments, services, professionals, updateAppointmentStatus } = useSupabaseCRM();
@@ -41,10 +41,10 @@ export const AppointmentConsult = () => {
   };
 
   const handleSearch = () => {
-    if (!searchPhone.replace(/\D/g, '') && !searchName.trim()) {
+    if (!searchPhone.replace(/\D/g, '') && !searchEmail.trim()) {
       toast({
         title: "Campos obrigatórios",
-        description: "Por favor, informe um telefone ou nome para buscar.",
+        description: "Por favor, informe um telefone ou email para buscar.",
         variant: "destructive",
       });
       return;
@@ -54,12 +54,12 @@ export const AppointmentConsult = () => {
     
     setTimeout(() => {
       const phoneNumbers = searchPhone.replace(/\D/g, '');
-      const nameQuery = searchName.trim().toLowerCase();
+      const emailQuery = searchEmail.trim().toLowerCase();
       
       let filteredAppointments = appointments.filter(appointment => {
-        const phoneMatch = phoneNumbers && appointment.cliente_telefone === phoneNumbers;
-        const nameMatch = nameQuery && appointment.cliente_nome.toLowerCase().includes(nameQuery);
-        return phoneMatch || nameMatch;
+        const phoneMatch = phoneNumbers && appointment.cliente_telefone.replace(/\D/g, '') === phoneNumbers;
+        const emailMatch = emailQuery && appointment.email && appointment.email.toLowerCase().includes(emailQuery);
+        return phoneMatch || emailMatch;
       });
 
       // Mapear os dados para incluir informações dos serviços e profissionais
@@ -88,7 +88,7 @@ export const AppointmentConsult = () => {
 
   const resetSearch = () => {
     setSearchPhone('');
-    setSearchName('');
+    setSearchEmail('');
     setSearchResults([]);
     setHasSearched(false);
   };
@@ -119,11 +119,6 @@ export const AppointmentConsult = () => {
       month: 'short',
       year: 'numeric'
     });
-  };
-
-  const handleReschedule = (appointment: any) => {
-    setSelectedAppointment(appointment);
-    setShowRescheduleModal(true);
   };
 
   const handleCancel = async (appointment: any) => {
@@ -168,7 +163,7 @@ export const AppointmentConsult = () => {
         <h2 className="text-3xl font-bold bg-gradient-to-r from-nova-pink-600 to-nova-purple-600 bg-clip-text text-transparent">
           Consultar Agendamentos
         </h2>
-        <p className="text-gray-600 mt-1">Busque seus agendamentos por telefone ou nome</p>
+        <p className="text-gray-600 mt-1">Busque seus agendamentos por telefone ou email</p>
       </div>
 
       {/* Formulário de Busca */}
@@ -199,17 +194,17 @@ export const AppointmentConsult = () => {
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="search-name" className="text-sm font-medium text-gray-700">
-                Nome Completo
+              <label htmlFor="search-email" className="text-sm font-medium text-gray-700">
+                Email
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  id="search-name"
-                  type="text"
-                  placeholder="Digite seu nome completo"
-                  value={searchName}
-                  onChange={(e) => setSearchName(e.target.value)}
+                  id="search-email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={searchEmail}
+                  onChange={(e) => setSearchEmail(e.target.value)}
                   className="pl-10"
                 />
               </div>
@@ -319,15 +314,6 @@ export const AppointmentConsult = () => {
                       
                       {appointment.status !== 'cancelado' && appointment.status !== 'concluido' && (
                         <div className="flex space-x-2">
-                          <Button
-                            onClick={() => handleReschedule(appointment)}
-                            size="sm"
-                            variant="outline"
-                            className="text-nova-purple-600 border-nova-purple-200 hover:bg-nova-purple-50"
-                          >
-                            <RefreshCw className="w-4 h-4 mr-1" />
-                            Reagendar
-                          </Button>
                           <Button
                             onClick={() => handleCancel(appointment)}
                             size="sm"
