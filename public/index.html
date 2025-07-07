@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -14,30 +13,20 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsdmtiaXdmdGxvbndsemV4dG14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkyNDMyNzQsImV4cCI6MjA2NDgxOTI3NH0.owDvN4PQX9MAX2OHlbBgupsF7W5Whom7v4qDqDwzFj4';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // Capturar USER ID da URL
+        // Capturar parâmetros da URL
         const urlParams = new URLSearchParams(window.location.search);
         const USER_ID = urlParams.get('user');
-        
-        // Função para redirecionar com USER ID
-        function redirectWithUserId(page) {
-            if (USER_ID) {
-                window.location.href = `${page}?user=${USER_ID}`;
-            } else {
-                alert('Link inválido. Entre em contato com o estabelecimento.');
-            }
-        }
 
         // Configurações do sistema
         let systemSettings = {
             nome_clinica: 'Nova Pele Estética',
             logo_url: '',
             titulo_pagina: 'Nova Pele Estética',
-            subtitulo_pagina: 'Cuidando melhor de você',
-            mensagem_boas_vindas: 'Bem-vinda à Nova Pele Estética! Agende seu horário online e transforme sua beleza com nossos tratamentos especializados.',
             cor_primaria: '#ec4899',
-            telefone_contato: '(11) 99999-9999',
-            whatsapp_contato: '(11) 99999-9999',
-            endereco_contato: 'Rua das Flores, 123 - Centro'
+            telefone_contato: '',
+            whatsapp_contato: '',
+            endereco_contato: '',
+            mensagem_boas_vindas: 'Bem-vinda à Nova Pele Estética! Agende seu horário online e transforme sua beleza com nossos tratamentos especializados.'
         };
 
         // Carregar configurações do sistema
@@ -151,6 +140,22 @@
             }
         }
 
+        function redirectToConsultar() {
+            if (USER_ID) {
+                window.location.href = `consultar.html?user=${USER_ID}`;
+            } else {
+                alert('Link inválido. Entre em contato com o estabelecimento.');
+            }
+        }
+
+        function redirectToAgendamento() {
+            if (USER_ID) {
+                window.location.href = `agendamento.html?user=${USER_ID}`;
+            } else {
+                alert('Link inválido. Entre em contato com o estabelecimento.');
+            }
+        }
+
         // Verificar se USER_ID existe ao carregar a página
         window.addEventListener('DOMContentLoaded', function() {
             console.log('Página carregada, USER_ID:', USER_ID);
@@ -170,182 +175,98 @@
         });
     </script>
     <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+        }
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
         @keyframes fadeIn {
             0% { opacity: 0; transform: translateY(20px); }
             100% { opacity: 1; transform: translateY(0); }
         }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.6s ease-out forwards;
-        }
-        
-        .float {
-            animation: float 3s ease-in-out infinite;
-        }
-        
-        .gradient-bg {
-            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
-        }
-        
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-        
-        .card-hover:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
     </style>
 </head>
-<body class="bg-gray-50 font-sans">
-    <div class="max-w-lg mx-auto bg-white min-h-screen shadow-sm">
+<body class="bg-gray-50">
+    <div class="max-w-4xl mx-auto bg-white min-h-screen shadow-sm">
         <!-- Header -->
-        <header class="relative overflow-hidden">
-            <div class="gradient-bg text-white p-8 pb-12">
-                <div class="text-center fade-in">
-                    <div id="logo-container" class="w-24 h-24 rounded-full bg-white mx-auto mb-4 overflow-hidden shadow-lg float flex items-center justify-center">
-                        <span class="text-gray-800 font-bold text-2xl">N</span>
-                    </div>
-                    <h1 id="clinic-name" class="text-3xl font-bold mb-2">Nova Pele Estética</h1>
-                    <p id="clinic-subtitle" class="text-lg opacity-90">Cuidando melhor de você!</p>
-                    <p id="welcome-message" class="text-sm opacity-75 mt-2">Bem-vinda à Nova Pele Estética! Agende seu horário online e transforme sua beleza com nossos tratamentos especializados.</p>
+        <header class="gradient-bg text-white p-8">
+            <div class="flex items-center justify-center space-x-4 mb-6">
+                <div id="logo-container" class="w-20 h-20 rounded-full bg-white bg-opacity-20 flex items-center justify-center overflow-hidden">
+                    <span class="text-white font-bold text-3xl">N</span>
                 </div>
-                
-                <!-- Decorative elements -->
-                <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-                <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
+                <div class="text-center">
+                    <h1 id="page-title" class="text-3xl font-bold mb-2">Nova Pele Estética</h1>
+                    <p class="opacity-90 text-lg">Cuidando melhor de você</p>
+                </div>
+            </div>
+            <div class="text-center">
+                <p id="welcome-message" class="text-lg opacity-90">
+                    Bem-vinda à Nova Pele Estética! Agende seu horário online e transforme sua beleza com nossos tratamentos especializados.
+                </p>
             </div>
         </header>
 
         <!-- Main Content -->
-        <main class="px-6 py-8">
-            <div class="space-y-6">
-                <!-- Welcome Message -->
-                <div class="text-center mb-8 fade-in" style="animation-delay: 0.2s">
-                    <h2 class="text-xl font-bold text-gray-800 mb-2">O que você gostaria de fazer?</h2>
-                    <p class="text-gray-600">Escolha uma das opções abaixo para continuar</p>
-                </div>
-
-                <!-- Action Cards -->
-                <div class="space-y-4">
-                    <!-- Agendar -->
-                    <a href="#" onclick="redirectWithUserId('agendamento.html')" class="block fade-in card-hover" style="animation-delay: 0.4s">
-                        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-md">
-                            <div class="flex items-center space-x-4">
-                                <div class="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center shadow-lg">
-                                    <i class="fas fa-calendar-plus text-white text-2xl"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <h3 class="text-xl font-bold text-gray-800 mb-1">Agendar Horário</h3>
-                                    <p class="text-gray-600 text-sm">Reserve seu horário para tratamentos de beleza e estética</p>
-                                </div>
-                                <div class="text-primary-500">
-                                    <i class="fas fa-chevron-right text-xl"></i>
-                                </div>
-                            </div>
+        <main class="p-8 fade-in">
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Agendar Card -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border hover:shadow-xl transition-shadow cursor-pointer" onclick="redirectToAgendamento()">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-calendar-plus text-white text-2xl"></i>
                         </div>
-                    </a>
-
-                    <!-- Consultar -->
-                    <a href="#" onclick="redirectWithUserId('consultar.html')" class="block fade-in card-hover" style="animation-delay: 0.6s">
-                        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-md">
-                            <div class="flex items-center space-x-4">
-                                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                    <i class="fas fa-search text-white text-2xl"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <h3 class="text-xl font-bold text-gray-800 mb-1">Consultar Agenda</h3>
-                                    <p class="text-gray-600 text-sm">Veja, reagende ou cancele seus agendamentos existentes</p>
-                                </div>
-                                <div class="text-blue-500">
-                                    <i class="fas fa-chevron-right text-xl"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-
-                <!-- Services Preview -->
-                <div class="mt-12 fade-in" style="animation-delay: 0.8s">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Nossos Serviços</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-primary-50 p-4 rounded-xl text-center">
-                            <div class="w-12 h-12 gradient-bg rounded-full flex items-center justify-center mx-auto mb-2">
-                                <i class="fas fa-spa text-white"></i>
-                            </div>
-                            <p class="text-sm font-medium text-gray-700">Limpeza de Pele</p>
-                        </div>
-                        <div class="bg-primary-50 p-4 rounded-xl text-center">
-                            <div class="w-12 h-12 gradient-bg rounded-full flex items-center justify-center mx-auto mb-2">
-                                <i class="fas fa-leaf text-white"></i>
-                            </div>
-                            <p class="text-sm font-medium text-gray-700">Tratamentos Faciais</p>
-                        </div>
-                        <div class="bg-primary-50 p-4 rounded-xl text-center">
-                            <div class="w-12 h-12 gradient-bg rounded-full flex items-center justify-center mx-auto mb-2">
-                                <i class="fas fa-magic text-white"></i>
-                            </div>
-                            <p class="text-sm font-medium text-gray-700">Rejuvenescimento</p>
-                        </div>
-                        <div class="bg-primary-50 p-4 rounded-xl text-center">
-                            <div class="w-12 h-12 gradient-bg rounded-full flex items-center justify-center mx-auto mb-2">
-                                <i class="fas fa-star text-white"></i>
-                            </div>
-                            <p class="text-sm font-medium text-gray-700">Tratamentos Especiais</p>
-                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-3">Agendar Horário</h2>
+                        <p class="text-gray-600 mb-4">
+                            Escolha seu serviço, profissional e horário de preferência de forma rápida e fácil.
+                        </p>
+                        <button class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors w-full">
+                            <i class="fas fa-arrow-right mr-2"></i>
+                            Agendar Agora
+                        </button>
                     </div>
                 </div>
 
-                <!-- Contact Info -->
-                <div class="mt-8 bg-gray-50 p-6 rounded-2xl fade-in" style="animation-delay: 1s">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Entre em Contato</h3>
-                    <div class="space-y-3">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 gradient-bg rounded-full flex items-center justify-center">
-                                <i class="fas fa-phone text-white text-sm"></i>
-                            </div>
+                <!-- Consultar Card -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border hover:shadow-xl transition-shadow cursor-pointer" onclick="redirectToConsultar()">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-search text-white text-2xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-3">Consultar Agendamentos</h2>
+                        <p class="text-gray-600 mb-4">
+                            Veja seus agendamentos existentes, confirme ou cancele conforme necessário.
+                        </p>
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors w-full">
+                            <i class="fas fa-arrow-right mr-2"></i>
+                            Consultar Agora
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Section -->
+            <div class="mt-12 bg-blue-50 p-6 rounded-xl">
+                <div class="text-center">
+                    <i class="fas fa-info-circle text-blue-500 text-3xl mb-4"></i>
+                    <h3 class="text-xl font-semibold text-blue-900 mb-3">Como funciona?</h3>
+                    <div class="grid md:grid-cols-2 gap-4 text-blue-800">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-calendar-check text-blue-500 mt-1"></i>
                             <div>
-                                <p class="font-medium text-gray-800">Telefone</p>
-                                <p id="phone-text" class="text-sm text-gray-600">(11) 99999-9999</p>
+                                <strong>Agendar:</strong> Escolha o serviço, profissional e horário disponível
                             </div>
                         </div>
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 gradient-bg rounded-full flex items-center justify-center">
-                                <i class="fab fa-whatsapp text-white text-sm"></i>
-                            </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-search text-blue-500 mt-1"></i>
                             <div>
-                                <p class="font-medium text-gray-800">WhatsApp</p>
-                                <p id="whatsapp-text" class="text-sm text-gray-600">(11) 99999-9999</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 gradient-bg rounded-full flex items-center justify-center">
-                                <i class="fas fa-map-marker-alt text-white text-sm"></i>
-                            </div>
-                            <div>
-                                <p class="font-medium text-gray-800">Endereço</p>
-                                <p id="address-text" class="text-sm text-gray-600">Rua das Flores, 123 - Centro</p>
+                                <strong>Consultar:</strong> Use seu telefone ou email para ver seus agendamentos
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
-
-        <!-- Footer -->
-        <footer class="p-6 text-center text-gray-400 text-sm border-t border-gray-100 mt-8">
-            <p class="mb-2">© 2025 <span id="footer-clinic-name">Nova Pele Estética</span>. Todos os direitos reservados.</p>
-            <p class="space-x-3">
-                <a href="#" class="text-primary-600 hover:text-primary-700">Termos de uso</a>
-                <span>•</span>
-                <a href="#" class="text-primary-600 hover:text-primary-700">Política de privacidade</a>
-            </p>
-        </footer>
     </div>
 </body>
 </html>

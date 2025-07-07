@@ -15,7 +15,7 @@ export const PublicLinks = () => {
   // Gerar URLs com o user ID - usando o domínio atual
   const baseUrl = window.location.origin;
   const agendamentoUrl = `${baseUrl}/agendamento.html?user=${user?.id}`;
-  const consultarUrl = `${baseUrl}/?section=appointment-consult`; // Mudando para a seção React
+  const consultarUrl = `${baseUrl}/consultar.html?user=${user?.id}`; // Voltando para a página HTML pública
   const landingUrl = `${baseUrl}/index.html?user=${user?.id}`;
 
   const copyToClipboard = async (text: string, type: string) => {
@@ -228,7 +228,7 @@ export const PublicLinks = () => {
                 <li>• Todos os agendamentos feitos através destes links ficarão vinculados à sua conta</li>
                 <li>• Os clientes poderão agendar e consultar seus agendamentos de forma independente</li>
                 <li>• Você receberá notificações de novos agendamentos no seu painel</li>
-                <li>• O link de consulta agora leva diretamente para a página com campos de busca</li>
+                <li>• O link de consulta leva para uma página pública com campos de busca</li>
               </ul>
             </div>
           </div>
