@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -173,11 +172,15 @@ export const AppointmentConsult = () => {
             <Search className="w-5 h-5 mr-2 text-nova-pink-500" />
             Buscar Agendamentos
           </CardTitle>
+          <p className="text-sm text-gray-600">
+            Informe seu telefone (WhatsApp) ou email para encontrar seus agendamentos
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label htmlFor="search-phone" className="text-sm font-medium text-gray-700">
+              <label htmlFor="search-phone" className="text-sm font-medium text-gray-700 flex items-center">
+                <Phone className="w-4 h-4 mr-1" />
                 Telefone (WhatsApp)
               </label>
               <div className="relative">
@@ -191,10 +194,12 @@ export const AppointmentConsult = () => {
                   className="pl-10"
                 />
               </div>
+              <p className="text-xs text-gray-500">Digite o mesmo número usado no agendamento</p>
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="search-email" className="text-sm font-medium text-gray-700">
+              <label htmlFor="search-email" className="text-sm font-medium text-gray-700 flex items-center">
+                <Mail className="w-4 h-4 mr-1" />
                 Email
               </label>
               <div className="relative">
@@ -208,7 +213,17 @@ export const AppointmentConsult = () => {
                   className="pl-10"
                 />
               </div>
+              <p className="text-xs text-gray-500">Digite o email usado no agendamento</p>
             </div>
+          </div>
+          
+          <div className="bg-blue-50 p-3 rounded-lg">
+            <p className="text-sm text-blue-800 flex items-start">
+              <Search className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
+              <span>
+                <strong>Como buscar:</strong> Você pode usar apenas o telefone, apenas o email, ou ambos para encontrar seus agendamentos.
+              </span>
+            </p>
           </div>
           
           <div className="flex space-x-3">
@@ -265,8 +280,13 @@ export const AppointmentConsult = () => {
                   Nenhum agendamento encontrado
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  Não encontramos agendamentos com as informações fornecidas.
+                  Não encontramos agendamentos com as informações fornecidas. Verifique se:
                 </p>
+                <div className="text-sm text-gray-600 space-y-1 mb-4">
+                  <p>• O telefone está correto (mesmo usado no agendamento)</p>
+                  <p>• O email está correto (mesmo usado no agendamento)</p>
+                  <p>• Você possui agendamentos cadastrados</p>
+                </div>
                 <Button 
                   onClick={resetSearch}
                   variant="outline"

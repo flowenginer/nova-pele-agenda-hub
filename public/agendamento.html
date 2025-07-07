@@ -22,7 +22,10 @@
             nome_clinica: 'Nova Pele Estética',
             logo_url: '',
             titulo_pagina: 'Nova Pele Estética',  
-            cor_primaria: '#ec4899'
+            cor_primaria: '#ec4899',
+            telefone_contato: '',
+            whatsapp_contato: '',
+            endereco_contato: ''
         };
 
         // Carregar configurações
@@ -36,8 +39,8 @@
 
                 if (data) {
                     systemSettings = { ...systemSettings, ...data };
-                    updatePageWithSettings();
                 }
+                updatePageWithSettings();
             } catch (error) {
                 console.log('Usando configurações padrão');
                 updatePageWithSettings();
@@ -57,27 +60,40 @@
                 .border-primary-500 { border-color: ${primaryColor}; }
                 .bg-primary-500 { background-color: ${primaryColor}; }
                 .hover\\:bg-primary-600:hover { background-color: ${primaryColor}ee; }
+                .from-pink-500 { --tw-gradient-from: ${primaryColor}; }
+                .to-pink-600 { --tw-gradient-to: ${primaryColor}dd; }
+                .hover\\:from-pink-600:hover { --tw-gradient-from: ${primaryColor}dd; }
+                .hover\\:to-pink-700:hover { --tw-gradient-to: ${primaryColor}aa; }
+                .text-pink-600 { color: ${primaryColor}; }
+                .hover\\:text-pink-700:hover { color: ${primaryColor}dd; }
+                .focus\\:border-pink-500:focus { border-color: ${primaryColor}; }
+                .focus\\:ring-pink-500:focus { --tw-ring-color: ${primaryColor}; }
+                .border-pink-300 { border-color: ${primaryColor}66; }
+                .bg-pink-100 { background-color: ${primaryColor}22; }
+                .text-pink-600 { color: ${primaryColor}; }
             `;
             document.head.appendChild(style);
 
-            // Atualizar logo e nome
+            // Atualizar logo e nome no cabeçalho
             const logoContainer = document.getElementById('logo-container');
             if (logoContainer) {
                 if (systemSettings.logo_url) {
-                    logoContainer.innerHTML = `<img src="${systemSettings.logo_url}" alt="${systemSettings.nome_clinica}" class="w-full h-full object-cover">`;
+                    logoContainer.innerHTML = `<img src="${systemSettings.logo_url}" alt="${systemSettings.nome_clinica}" class="w-full h-full object-cover rounded-full">`;
                 } else {
                     logoContainer.innerHTML = `<span class="text-white font-bold text-2xl">${(systemSettings.nome_clinica || 'N').charAt(0)}</span>`;
                 }
             }
 
-            const clinicName = document.getElementById('clinic-name');
-            if (clinicName) {
-                clinicName.textContent = systemSettings.nome_clinica || 'Nova Pele Estética';
-            }
-
+            // Atualizar título da página no cabeçalho
             const pageTitle = document.getElementById('page-title');
             if (pageTitle) {
-                pageTitle.textContent = `${systemSettings.nome_clinica || 'Nova Pele Estética'} - Agendamento`;
+                pageTitle.textContent = `${systemSettings.nome_clinica || 'Nova Pele Estética'}`;
+            }
+
+            // Atualizar subtítulo
+            const pageSubtitle = document.getElementById('page-subtitle');
+            if (pageSubtitle) {
+                pageSubtitle.textContent = 'Agende seu horário online';
             }
         }
 
@@ -87,6 +103,7 @@
                 document.body.innerHTML = `
                     <div class="min-h-screen flex items-center justify-center bg-gray-50">
                         <div class="text-center p-8">
+                            <i class="fas fa-exclamation-triangle text-6xl text-yellow-500 mb-6"></i>
                             <h1 class="text-2xl font-bold text-gray-800 mb-4">Link Inválido</h1>
                             <p class="text-gray-600">Entre em contato com o estabelecimento para obter um link válido.</p>
                         </div>
@@ -117,12 +134,12 @@
         <!-- Header -->
         <header class="gradient-bg text-white p-6">
             <div class="flex items-center justify-center space-x-4">
-                <div id="logo-container" class="w-16 h-16 rounded-full bg-white flex items-center justify-center overflow-hidden">
-                    <span class="text-gray-800 font-bold text-2xl">N</span>
+                <div id="logo-container" class="w-16 h-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center overflow-hidden">
+                    <span class="text-white font-bold text-2xl">N</span>
                 </div>
                 <div class="text-center">
-                    <h1 id="page-title" class="text-2xl font-bold">Nova Pele Estética - Agendamento</h1>
-                    <p class="opacity-90">Agende seu horário online</p>
+                    <h1 id="page-title" class="text-2xl font-bold">Nova Pele Estética</h1>
+                    <p id="page-subtitle" class="opacity-90">Agende seu horário online</p>
                 </div>
             </div>
         </header>

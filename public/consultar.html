@@ -66,16 +66,17 @@
             `;
             document.head.appendChild(style);
 
-            // Atualizar logo e nome
+            // Atualizar logo e nome no cabeçalho
             const logoContainer = document.getElementById('logo-container');
             if (logoContainer) {
                 if (systemSettings.logo_url) {
-                    logoContainer.innerHTML = `<img src="${systemSettings.logo_url}" alt="${systemSettings.nome_clinica}" class="w-full h-full object-cover">`;
+                    logoContainer.innerHTML = `<img src="${systemSettings.logo_url}" alt="${systemSettings.nome_clinica}" class="w-full h-full object-cover rounded-full">`;
                 } else {
                     logoContainer.innerHTML = `<span class="text-white font-bold text-2xl">${(systemSettings.nome_clinica || 'N').charAt(0)}</span>`;
                 }
             }
 
+            // Atualizar nome da clínica no cabeçalho
             const pageTitle = document.getElementById('page-title');
             if (pageTitle) {
                 pageTitle.textContent = `${systemSettings.nome_clinica || 'Nova Pele Estética'}`;
