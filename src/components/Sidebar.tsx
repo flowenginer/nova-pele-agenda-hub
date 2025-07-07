@@ -16,6 +16,7 @@ import {
 interface SidebarProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
+  settings?: any;
 }
 
 const menuItems = [
@@ -34,16 +35,28 @@ const menuItems = [
   { id: 'settings', label: 'Configurações', icon: Settings },
 ];
 
-export const Sidebar = ({ activeSection, onSectionChange }: SidebarProps) => {
+export const Sidebar = ({ activeSection, onSectionChange, settings }: SidebarProps) => {
+  const clinicName = settings?.nome_clinica || 'Nova Pele';
+  const logoUrl = settings?.logo_url;
+  
+  // Criar iniciais do nome da clínica
+  const getInitials = (name: string) => {
+    return name.split(' ').map(word => word.charAt(0)).join('').substring(0, 2).toUpperCase();
+  };
+
   return (
     <div className="w-64 bg-white/80 backdrop-blur-sm border-r border-white/20 shadow-sm">
       <div className="p-6">
         <div className="flex items-center space-x-3 mb-8">
-          <div className="w-10 h-10 bg-gradient-to-br from-nova-pink-500 to-nova-purple-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">NP</span>
+          <div className="w-10 h-10 bg-gradient-to-br from-nova-pink-500 to-nova-purple-500 rounded-lg flex items-center justify-center overflow-hidden">
+            {logoUrl ? (
+              <img src={logoUrl} alt={clinicName} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-white font-bold text-lg">{getInitials(clinicName)}</span>
+            )}
           </div>
           <div>
-            <h1 className="font-bold text-gray-800">Nova Pele</h1>
+            <h1 className="font-bold text-gray-800">{clinicName}</h1>
             <p className="text-sm text-gray-600">Estética</p>
           </div>
         </div>

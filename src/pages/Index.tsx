@@ -253,7 +253,11 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-nova-pink-50 to-nova-purple-50">
       <div className="flex">
-        <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+        <Sidebar 
+          activeSection={activeSection} 
+          onSectionChange={setActiveSection}
+          settings={crmData.settings}
+        />
         
         <div className="flex-1 flex flex-col">
           {/* Header */}

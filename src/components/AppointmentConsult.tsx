@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -162,7 +163,7 @@ export const AppointmentConsult = () => {
         <h2 className="text-3xl font-bold bg-gradient-to-r from-nova-pink-600 to-nova-purple-600 bg-clip-text text-transparent">
           Consultar Agendamentos
         </h2>
-        <p className="text-gray-600 mt-1">Busque seus agendamentos por telefone ou email</p>
+        <p className="text-gray-600 mt-1">Busque seus agendamentos por telefone (WhatsApp) ou email</p>
       </div>
 
       {/* Formulário de Busca */}
@@ -221,7 +222,7 @@ export const AppointmentConsult = () => {
             <p className="text-sm text-blue-800 flex items-start">
               <Search className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
               <span>
-                <strong>Como buscar:</strong> Você pode usar apenas o telefone, apenas o email, ou ambos para encontrar seus agendamentos.
+                <strong>Como buscar:</strong> Você pode usar apenas o telefone (WhatsApp), apenas o email, ou ambos para encontrar seus agendamentos.
               </span>
             </p>
           </div>
@@ -283,7 +284,7 @@ export const AppointmentConsult = () => {
                   Não encontramos agendamentos com as informações fornecidas. Verifique se:
                 </p>
                 <div className="text-sm text-gray-600 space-y-1 mb-4">
-                  <p>• O telefone está correto (mesmo usado no agendamento)</p>
+                  <p>• O telefone (WhatsApp) está correto (mesmo usado no agendamento)</p>
                   <p>• O email está correto (mesmo usado no agendamento)</p>
                   <p>• Você possui agendamentos cadastrados</p>
                 </div>
