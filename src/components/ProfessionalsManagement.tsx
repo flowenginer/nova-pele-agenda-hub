@@ -68,6 +68,14 @@ export const ProfessionalsManagement = ({
     }
   };
 
+  const handleSaveProfessional = async (id: number | null, data: any) => {
+    if (id) {
+      return await updateProfessional(id, data);
+    } else {
+      return await addProfessional(data);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -130,7 +138,6 @@ export const ProfessionalsManagement = ({
                       <Switch
                         checked={professional.ativo}
                         onCheckedChange={() => handleToggleActive(professional)}
-                        size="sm"
                       />
                       <span className="text-sm text-gray-600">
                         {professional.ativo ? 'Ativo' : 'Inativo'}
@@ -209,7 +216,7 @@ export const ProfessionalsManagement = ({
           professional={editingProfessional}
           isOpen={true}
           onClose={handleCloseDialog}
-          onSave={editingProfessional ? updateProfessional : addProfessional}
+          onSave={handleSaveProfessional}
         />
       )}
     </div>

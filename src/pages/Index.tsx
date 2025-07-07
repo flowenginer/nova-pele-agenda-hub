@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabaseCRM } from '@/hooks/useSupabaseCRM';
@@ -59,15 +58,15 @@ const Index = () => {
   const handleAddProfessional = async (professionalData: any) => {
     try {
       await crmData.addProfessional({
-        nome: professionalData.name,
+        nome: professionalData.nome,
         email: professionalData.email,
-        telefone: professionalData.phone,
-        especialidades: professionalData.specialties,
-        horario_inicio: professionalData.workingHours.start,
-        horario_fim: professionalData.workingHours.end,
-        dias_trabalho: professionalData.workingDays,
-        ativo: professionalData.isActive,
-        photo_url: professionalData.avatar
+        telefone: professionalData.telefone,
+        especialidades: professionalData.especialidades,
+        horario_inicio: professionalData.horario_inicio,
+        horario_fim: professionalData.horario_fim,
+        dias_trabalho: professionalData.dias_trabalho,
+        ativo: professionalData.ativo,
+        photo_url: professionalData.photo_url
       });
     } catch (error) {
       console.error('Erro ao adicionar profissional:', error);
@@ -215,22 +214,9 @@ const Index = () => {
       case 'professionals':
         return (
           <ProfessionalsManagement
-            professionals={crmData.professionals.map(prof => ({
-              id: prof.id.toString(),
-              name: prof.nome,
-              email: prof.email,
-              phone: prof.telefone,
-              specialties: prof.especialidades || [],
-              workingHours: {
-                start: prof.horario_inicio || '08:00',
-                end: prof.horario_fim || '18:00'
-              },
-              workingDays: prof.dias_trabalho || [1, 2, 3, 4, 5],
-              isActive: prof.ativo !== false,
-              avatar: prof.photo_url
-            }))}
-            onUpdateProfessionals={handleUpdateProfessionals}
-            onAddProfessional={handleAddProfessional}
+            professionals={crmData.professionals}
+            addProfessional={handleAddProfessional}
+            updateProfessional={crmData.updateProfessional}
           />
         );
       case 'revenue':
