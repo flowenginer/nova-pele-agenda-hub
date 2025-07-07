@@ -13,11 +13,21 @@ import { Settings } from '@/components/Settings';
 import { Button } from '@/components/ui/button';
 import { LogOut, Loader2 } from 'lucide-react';
 import { PublicLinks } from '@/components/PublicLinks';
+import { AppointmentConsult } from '@/components/AppointmentConsult';
 
 const Index = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const crmData = useSupabaseCRM();
   const [activeSection, setActiveSection] = useState('dashboard');
+
+  // Verificar se há parâmetro de seção na URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const section = urlParams.get('section');
+    if (section === 'appointment-consult') {
+      setActiveSection('appointment-consult');
+    }
+  }, []);
 
   // Show loading while checking authentication
   if (authLoading) {
@@ -77,6 +87,8 @@ const Index = () => {
     switch (activeSection) {
       case 'dashboard':
         return <Dashboard metrics={crmData.dashboardMetrics} />;
+      case 'appointment-consult':
+        return <AppointmentConsult />;
       case 'appointments':
         // Combinando agendamentos normais com inicio_contato
         const allAppointments = [
