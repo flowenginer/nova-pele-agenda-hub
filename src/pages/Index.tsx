@@ -19,6 +19,22 @@ const Index = () => {
   const crmData = useSupabaseCRM();
   const [activeSection, setActiveSection] = useState('dashboard');
 
+  // Listen for URL changes to update active section
+  useEffect(() => {
+    const handlePopState = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const section = urlParams.get('section') || 'dashboard';
+      setActiveSection(section);
+    };
+
+    handlePopState(); // Set initial section
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
   // Show loading while checking authentication
   if (authLoading) {
     return (
@@ -78,7 +94,6 @@ const Index = () => {
       case 'dashboard':
         return <Dashboard metrics={crmData.dashboardMetrics} />;
       case 'appointments':
-        // Combinando agendamentos normais com inicio_contato
         const allAppointments = [
           // Agendamentos normais
           ...crmData.appointments.map(apt => ({
@@ -253,11 +268,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-nova-pink-50 to-nova-purple-50">
       <div className="flex">
-        <Sidebar 
-          activeSection={activeSection} 
-          onSectionChange={setActiveSection}
-          settings={crmData.settings}
-        />
+        <Sidebar />
         
         <div className="flex-1 flex flex-col">
           {/* Header */}
