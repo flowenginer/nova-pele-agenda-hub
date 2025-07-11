@@ -13,7 +13,6 @@ import { Settings } from '@/components/Settings';
 import { Button } from '@/components/ui/button';
 import { LogOut, Loader2 } from 'lucide-react';
 import { PublicLinks } from '@/components/PublicLinks';
-import { HeroSection } from '@/components/HeroSection';
 
 const Index = () => {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -262,17 +261,14 @@ const Index = () => {
         />
         
         <div className="flex-1 flex flex-col">
-          {/* Hero Section */}
-          <HeroSection settings={crmData.settings} />
-          
           {/* Header */}
           <div className="bg-white/80 backdrop-blur-sm border-b border-white/20 shadow-sm p-4">
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">
-                  Sistema de Gestão
+                  Bem-vindo, {crmData.settings?.nome_clinica || 'Nova Pele Estética'}!
                 </h1>
-                <p className="text-gray-600">Painel administrativo</p>
+                <p className="text-gray-600">Sistema de Gestão</p>
               </div>
               <Button
                 variant="outline"
