@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';  
-import { AddLeadDialog } from './AddLeadDialog';
 import { Appointment } from '../types/crm';
 import { Calendar, User, Clock, Phone, Mail, MapPin, Calendar as CalendarIcon } from 'lucide-react';
 
@@ -70,39 +69,36 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
   };
 
   return (
-    <div className="flex flex-col h-screen p-2 sm:p-4">
-      <div className="flex items-center justify-between flex-shrink-0 mb-4 sm:mb-6">
+    <div className="flex flex-col h-screen">
+      <div className="flex items-center justify-between flex-shrink-0 mb-6">
         <div>
-          <h2 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-nova-pink-600 to-nova-purple-600 bg-clip-text text-transparent">
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-nova-pink-600 to-nova-purple-600 bg-clip-text text-transparent">
             Agendamentos
           </h2>
-          <p className="text-gray-600 mt-1 text-sm sm:text-base">Gestão visual dos agendamentos</p>
+          <p className="text-gray-600 mt-1">Gestão visual dos agendamentos</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 flex-1 overflow-hidden">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 flex-1 overflow-hidden">
         {statusColumns.map(column => {
           const columnAppointments = getAppointmentsByStatus(column.id);
           return (
             <div 
               key={column.id} 
-              className={`rounded-lg border-2 ${column.color} flex flex-col overflow-hidden min-h-0`}
+              className={`rounded-lg border-2 ${column.color} flex flex-col overflow-hidden`}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, column.id)}
             >
-              <div className="flex items-center justify-between p-2 sm:p-4 flex-shrink-0 border-b border-current border-opacity-20">
-                <h3 className="font-semibold text-gray-800 text-sm sm:text-base">{column.title}</h3>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-xs">
-                    {columnAppointments.length}
-                  </Badge>
-                  <AddLeadDialog status={column.id} statusTitle={column.title} />
-                </div>
+              <div className="flex items-center justify-between p-4 flex-shrink-0 border-b border-current border-opacity-20">
+                <h3 className="font-semibold text-gray-800">{column.title}</h3>
+                <Badge variant="secondary" className="text-xs">
+                  {columnAppointments.length}
+                </Badge>
               </div>
               
-              <div className="flex-1 overflow-hidden min-h-0">
+              <div className="flex-1 overflow-hidden">
                 <ScrollArea className="h-full">
-                  <div className="p-2 sm:p-4 space-y-2 sm:space-y-3">
+                  <div className="p-4 space-y-3">
                     {columnAppointments.map(appointment => (
                       <Dialog key={appointment.id}>
                         <DialogTrigger asChild>
@@ -112,11 +108,11 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
                             onDragStart={(e) => handleDragStart(e, appointment.id)}
                             onDragEnd={handleDragEnd}
                           >
-                            <CardContent className="p-3 sm:p-4">
-                              <div className="space-y-2 sm:space-y-3">
+                            <CardContent className="p-4">
+                              <div className="space-y-3">
                                 <div className="flex items-start justify-between mb-2">
-                                  <div className="flex-1 min-w-0">
-                                    <h4 className="font-medium text-gray-800 truncate text-sm sm:text-lg">
+                                  <div className="flex-1">
+                                    <h4 className="font-medium text-gray-800 truncate text-lg">
                                       {appointment.client?.name || 'Cliente não identificado'}
                                     </h4>
                                     <Badge 
@@ -132,19 +128,19 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
                                   </div>
                                 </div>
                                 
-                                <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-600">
+                                <div className="space-y-2 text-sm text-gray-600">
                                   <div className="flex items-center space-x-2">
-                                    <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                                    <span className="truncate">{new Date(appointment.date).toLocaleDateString('pt-BR')} - {appointment.time}</span>
+                                    <Calendar className="w-4 h-4" />
+                                    <span>{new Date(appointment.date).toLocaleDateString('pt-BR')} - {appointment.time}</span>
                                   </div>
                                   
                                   <div className="flex items-center space-x-2">
-                                    <Clock className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                                    <Clock className="w-4 h-4" />
                                     <span className="truncate">{appointment.service?.name}</span>
                                   </div>
 
                                   <div className="flex items-center space-x-2">
-                                    <User className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                                    <User className="w-4 h-4" />
                                     <span className="truncate">{appointment.professional?.name || 'Profissional não definido'}</span>
                                   </div>
                                 </div>
@@ -153,13 +149,13 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="w-full text-green-600 border-green-200 hover:bg-green-50 text-xs sm:text-sm h-6 sm:h-8"
+                                    className="w-full text-green-600 border-green-200 hover:bg-green-50"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleWhatsAppClick(appointment);
                                     }}
                                   >
-                                    <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                                    <Phone className="w-4 h-4 mr-2" />
                                     WhatsApp
                                   </Button>
                                 )}
@@ -168,75 +164,73 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
                           </Card>
                         </DialogTrigger>
                         
-                        <DialogContent className="max-w-md mx-2 sm:mx-auto">
+                        <DialogContent className="max-w-md">
                           <DialogHeader>
-                            <DialogTitle className="text-sm sm:text-base">Informações do Cliente</DialogTitle>
+                            <DialogTitle>Informações do Cliente</DialogTitle>
                           </DialogHeader>
-                          <div className="space-y-3 sm:space-y-4">
+                          <div className="space-y-4">
                             <div className="flex items-center space-x-3">
-                              <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
-                              <div className="min-w-0">
-                                <p className="font-medium text-sm sm:text-base truncate">{appointment.client?.name}</p>
-                                <p className="text-xs sm:text-sm text-gray-500">Cliente</p>
+                              <User className="w-5 h-5 text-gray-500" />
+                              <div>
+                                <p className="font-medium">{appointment.client?.name}</p>
+                                <p className="text-sm text-gray-500">Cliente</p>
                               </div>
                             </div>
 
                             <div className="flex items-center space-x-3">
-                              <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
-                              <div className="min-w-0">
-                                <p className="font-medium text-sm sm:text-base truncate">{appointment.client?.phone}</p>
-                                <p className="text-xs sm:text-sm text-gray-500">Telefone</p>
+                              <Phone className="w-5 h-5 text-gray-500" />
+                              <div>
+                                <p className="font-medium">{appointment.client?.phone}</p>
+                                <p className="text-sm text-gray-500">Telefone</p>
                               </div>
                             </div>
 
                             {appointment.client?.email && (
                               <div className="flex items-center space-x-3">
-                                <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
-                                <div className="min-w-0">
-                                  <p className="font-medium text-sm sm:text-base truncate">{appointment.client.email}</p>
-                                  <p className="text-xs sm:text-sm text-gray-500">E-mail</p>
+                                <Mail className="w-5 h-5 text-gray-500" />
+                                <div>
+                                  <p className="font-medium">{appointment.client.email}</p>
+                                  <p className="text-sm text-gray-500">E-mail</p>
                                 </div>
                               </div>
                             )}
 
                             {appointment.client?.address && (
                               <div className="flex items-center space-x-3">
-                                <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
-                                <div className="min-w-0">
-                                  <p className="font-medium text-sm sm:text-base truncate">{appointment.client.address}</p>
-                                  <p className="text-xs sm:text-sm text-gray-500">Endereço</p>
+                                <MapPin className="w-5 h-5 text-gray-500" />
+                                <div>
+                                  <p className="font-medium">{appointment.client.address}</p>
+                                  <p className="text-sm text-gray-500">Endereço</p>
                                 </div>
                               </div>
                             )}
 
                             {appointment.client?.birthDate && (
                               <div className="flex items-center space-x-3">
-                                <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
-                                <div className="min-w-0">
-                                  <p className="font-medium text-sm sm:text-base truncate">{new Date(appointment.client.birthDate).toLocaleDateString('pt-BR')}</p>
-                                  <p className="text-xs sm:text-sm text-gray-500">Data de Nascimento</p>
+                                <CalendarIcon className="w-5 h-5 text-gray-500" />
+                                <div>
+                                  <p className="font-medium">{new Date(appointment.client.birthDate).toLocaleDateString('pt-BR')}</p>
+                                  <p className="text-sm text-gray-500">Data de Nascimento</p>
                                 </div>
                               </div>
                             )}
 
                             <div className="pt-2 border-t">
-                              <h4 className="font-medium mb-2 text-sm sm:text-base">Agendamento</h4>
-                              <div className="space-y-1">
-                                <p className="text-xs sm:text-sm text-gray-600">
-                                  <strong>Serviço:</strong> {appointment.service?.name}
+                              <h4 className="font-medium mb-2">Agendamento</h4>
+                              <p className="text-sm text-gray-600">
+                                <strong>Serviço:</strong> {appointment.service?.name}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                <strong>Profissional:</strong> {appointment.professional?.name}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                <strong>Data:</strong> {new Date(appointment.date).toLocaleDateString('pt-BR')} às {appointment.time}
+                              </p>
+                              {appointment.value && (
+                                <p className="text-sm text-gray-600">
+                                  <strong>Valor:</strong> R$ {appointment.value.toFixed(2)}
                                 </p>
-                                <p className="text-xs sm:text-sm text-gray-600">
-                                  <strong>Profissional:</strong> {appointment.professional?.name}
-                                </p>
-                                <p className="text-xs sm:text-sm text-gray-600">
-                                  <strong>Data:</strong> {new Date(appointment.date).toLocaleDateString('pt-BR')} às {appointment.time}
-                                </p>
-                                {appointment.value && (
-                                  <p className="text-xs sm:text-sm text-gray-600">
-                                    <strong>Valor:</strong> R$ {appointment.value.toFixed(2)}
-                                  </p>
-                                )}
-                              </div>
+                              )}
                             </div>
                           </div>
                         </DialogContent>
@@ -244,9 +238,9 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
                     ))}
                     
                     {columnAppointments.length === 0 && (
-                      <div className="text-center py-4 sm:py-8 text-gray-400">
-                        <Calendar className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-xs sm:text-sm">Nenhum agendamento</p>
+                      <div className="text-center py-8 text-gray-400">
+                        <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">Nenhum agendamento</p>
                       </div>
                     )}
                   </div>
