@@ -179,6 +179,7 @@ const Index = () => {
             appointments={allAppointments}
             onStatusChange={handleStatusChange}
             onWhatsAppClick={handleWhatsAppClick}
+            onRefresh={crmData.refetch}
           />
         );
       case 'clients':

@@ -7,11 +7,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';  
 import { Appointment } from '../types/crm';
 import { Calendar, User, Clock, Phone, Mail, MapPin, Calendar as CalendarIcon } from 'lucide-react';
+import { AddLeadDialog } from './AddLeadDialog';
 
 interface AppointmentsKanbanProps {
   appointments: Appointment[];
   onStatusChange: (appointmentId: string, status: Appointment['status']) => void;
   onWhatsAppClick: (phone: string) => void;
+  onRefresh?: () => void;
 }
 
 const statusColumns = [
@@ -31,7 +33,7 @@ const statusColors = {
   nao_compareceu: 'bg-gray-100 text-gray-800 hover:bg-gray-200'
 };
 
-export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppClick }: AppointmentsKanbanProps) => {
+export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppClick, onRefresh }: AppointmentsKanbanProps) => {
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
 
   const getAppointmentsByStatus = (status: string) => {
@@ -91,9 +93,15 @@ export const AppointmentsKanban = ({ appointments, onStatusChange, onWhatsAppCli
             >
               <div className="flex items-center justify-between p-4 flex-shrink-0 border-b border-current border-opacity-20">
                 <h3 className="font-semibold text-gray-800">{column.title}</h3>
-                <Badge variant="secondary" className="text-xs">
-                  {columnAppointments.length}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <AddLeadDialog 
+                    status={column.id} 
+                    onLeadAdded={() => onRefresh?.()} 
+                  />
+                  <Badge variant="secondary" className="text-xs">
+                    {columnAppointments.length}
+                  </Badge>
+                </div>
               </div>
               
               <div className="flex-1 overflow-hidden">
