@@ -201,6 +201,54 @@ export type Database = {
         }
         Relationships: []
       }
+      despesas: {
+        Row: {
+          categoria: string | null
+          created_at: string
+          data_pagamento: string | null
+          data_vencimento: string
+          descricao: string
+          frequencia_recorrencia: string | null
+          id: string
+          metodo_pagamento: string | null
+          observacoes: string | null
+          recorrente: boolean | null
+          status: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento: string
+          descricao: string
+          frequencia_recorrencia?: string | null
+          id?: string
+          metodo_pagamento?: string | null
+          observacoes?: string | null
+          recorrente?: boolean | null
+          status?: string
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento?: string
+          descricao?: string
+          frequencia_recorrencia?: string | null
+          id?: string
+          metodo_pagamento?: string | null
+          observacoes?: string | null
+          recorrente?: boolean | null
+          status?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: []
+      }
       iniciou_contato: {
         Row: {
           created_at: string | null
@@ -243,6 +291,7 @@ export type Database = {
       profissionais: {
         Row: {
           ativo: boolean | null
+          comissao_porcentagem: number | null
           created_at: string | null
           dias_trabalho: number[] | null
           email: string | null
@@ -258,6 +307,7 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean | null
+          comissao_porcentagem?: number | null
           created_at?: string | null
           dias_trabalho?: number[] | null
           email?: string | null
@@ -273,6 +323,7 @@ export type Database = {
         }
         Update: {
           ativo?: boolean | null
+          comissao_porcentagem?: number | null
           created_at?: string | null
           dias_trabalho?: number[] | null
           email?: string | null
@@ -285,6 +336,51 @@ export type Database = {
           photo_url?: string | null
           telefone?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      prontuarios: {
+        Row: {
+          agendamento_id: number | null
+          cliente_id: string
+          created_at: string
+          dados_anamnese: Json | null
+          fotos_antes: string[] | null
+          fotos_depois: string[] | null
+          id: string
+          observacoes: string | null
+          profissional_id: number | null
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          agendamento_id?: number | null
+          cliente_id: string
+          created_at?: string
+          dados_anamnese?: Json | null
+          fotos_antes?: string[] | null
+          fotos_depois?: string[] | null
+          id?: string
+          observacoes?: string | null
+          profissional_id?: number | null
+          tipo?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          agendamento_id?: number | null
+          cliente_id?: string
+          created_at?: string
+          dados_anamnese?: Json | null
+          fotos_antes?: string[] | null
+          fotos_depois?: string[] | null
+          id?: string
+          observacoes?: string | null
+          profissional_id?: number | null
+          tipo?: string
+          titulo?: string
+          updated_at?: string
         }
         Relationships: []
       }

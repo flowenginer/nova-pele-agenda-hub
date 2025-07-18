@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Client } from '../types/crm';
-import { Users, Search, Phone, Mail, Plus, User } from 'lucide-react';
+import { MedicalRecords } from './MedicalRecords';
+import { Users, Search, Phone, Mail, Plus, User, FileText } from 'lucide-react';
 
 interface ClientsManagementProps {
   clients: Client[];
@@ -15,6 +16,7 @@ interface ClientsManagementProps {
 export const ClientsManagement = ({ clients, onAddClient }: ClientsManagementProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedClientForRecords, setSelectedClientForRecords] = useState<Client | null>(null);
   const [newClient, setNewClient] = useState({
     name: '',
     phone: '',
@@ -61,6 +63,24 @@ export const ClientsManagement = ({ clients, onAddClient }: ClientsManagementPro
     cliente: 'Cliente',
     inativo: 'Inativo'
   };
+
+  // Se um cliente foi selecionado para prontuário, mostrar componente de prontuário
+  if (selectedClientForRecords) {
+    // Mapear campos do Client para o formato esperado pelo MedicalRecords
+    const mappedClient = {
+      id: selectedClientForRecords.id,
+      nome: selectedClientForRecords.name,
+      telefone: selectedClientForRecords.phone,
+      email: selectedClientForRecords.email
+    };
+    
+    return (
+      <MedicalRecords 
+        selectedClient={mappedClient}
+        onClose={() => setSelectedClientForRecords(null)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -215,17 +235,28 @@ export const ClientsManagement = ({ clients, onAddClient }: ClientsManagementPro
                 )}
               </div>
               
-              {client.whatsapp && (
+              <div className="flex space-x-2">
+                {client.whatsapp && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 text-green-600 border-green-200 hover:bg-green-50"
+                    onClick={() => handleWhatsAppClick(client.whatsapp!, client.name)}
+                  >
+                    <Phone className="w-4 h-4 mr-2" />
+                    WhatsApp
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="outline"
-                  className="w-full text-green-600 border-green-200 hover:bg-green-50"
-                  onClick={() => handleWhatsAppClick(client.whatsapp!, client.name)}
+                  className="flex-1 text-nova-pink-600 border-nova-pink-200 hover:bg-nova-pink-50"
+                  onClick={() => setSelectedClientForRecords(client)}
                 >
-                  <Phone className="w-4 h-4 mr-2" />
-                  WhatsApp
+                  <FileText className="w-4 h-4 mr-2" />
+                  Prontuário
                 </Button>
-              )}
+              </div>
             </CardContent>
           </Card>
         ))}
