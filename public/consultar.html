@@ -247,19 +247,21 @@
             return numbers.substring(0, 11);
         }
 
-        // Buscar agendamentos por telefone/email
+        // Buscar agendamentos por telefone/email/whatsapp
         async function searchAppointments() {
             const phoneInput = document.getElementById('search-phone');
             const emailInput = document.getElementById('search-email');
+            const whatsappInput = document.getElementById('search-whatsapp');
             const searchBtn = document.getElementById('search-btn');
             const resetBtn = document.getElementById('reset-btn');
             const resultsTitle = document.getElementById('results-title');
             
             const phone = phoneInput.value.replace(/\D/g, '');
             const email = emailInput.value.trim().toLowerCase();
+            const whatsapp = whatsappInput.value.replace(/\D/g, '');
             
-            if (!phone && !email) {
-                showMessage('Por favor, informe um telefone ou email para buscar.', 'error');
+            if (!phone && !email && !whatsapp) {
+                showMessage('Por favor, informe um telefone, email ou WhatsApp para buscar.', 'error');
                 return;
             }
             
@@ -268,24 +270,26 @@
             searchBtn.disabled = true;
             
             try {
-                let query = supabaseClient
-                    .from('agendamentos')
-                    .select(`
-                        *,
-                        servicos!inner(nome, preco),
-                        profissionais!inner(nome)
-                    `);
+                // Buscar por múltiplos critérios
+                const searches = [];
                 
-                // Construir filtros
-                const filters = [];
                 if (phone) {
-                    // Buscar por telefone removendo formatação
-                    query = query.ilike('cliente_telefone', `%${phone}%`);
+                    searches.push(
+                        supabaseClient
+                            .from('agendamentos')
+                            .select(`
+                                *,
+                                servicos!inner(nome, preco),
+                                profissionais!inner(nome)
+                            `)
+                            .ilike('cliente_telefone', `%${phone}%`)
+                            .order('data_agendamento', { ascending: false })
+                    );
                 }
+                
                 if (email) {
-                    if (phone) {
-                        // Se tiver telefone também, fazer uma busca separada por email e combinar
-                        const { data: emailData } = await supabaseClient
+                    searches.push(
+                        supabaseClient
                             .from('agendamentos')
                             .select(`
                                 *,
@@ -293,28 +297,42 @@
                                 profissionais!inner(nome)
                             `)
                             .ilike('email', `%${email}%`)
-                            .order('data_agendamento', { ascending: false });
-                        
-                        const { data: phoneData } = await query
-                            .order('data_agendamento', { ascending: false });
-                        
-                        // Combinar e remover duplicatas
-                        const combinedData = [...(phoneData || []), ...(emailData || [])];
-                        const uniqueData = combinedData.filter((appointment, index, self) => 
-                            index === self.findIndex(a => a.id === appointment.id)
-                        );
-                        appointments = uniqueData;
-                    } else {
-                        query = query.ilike('email', `%${email}%`);
-                        const { data, error } = await query.order('data_agendamento', { ascending: false });
-                        if (error) throw error;
-                        appointments = data || [];
-                    }
-                } else {
-                    const { data, error } = await query.order('data_agendamento', { ascending: false });
-                    if (error) throw error;
-                    appointments = data || [];
+                            .order('data_agendamento', { ascending: false })
+                    );
                 }
+                
+                if (whatsapp) {
+                    // Buscar também no campo cliente_telefone para WhatsApp
+                    searches.push(
+                        supabaseClient
+                            .from('agendamentos')
+                            .select(`
+                                *,
+                                servicos!inner(nome, preco),
+                                profissionais!inner(nome)
+                            `)
+                            .ilike('cliente_telefone', `%${whatsapp}%`)
+                            .order('data_agendamento', { ascending: false })
+                    );
+                }
+                
+                // Executar todas as buscas
+                const allResults = await Promise.all(searches);
+                const allAppointments = [];
+                
+                // Combinar resultados
+                allResults.forEach(result => {
+                    if (result.data) {
+                        allAppointments.push(...result.data);
+                    }
+                });
+                
+                // Remover duplicatas
+                const uniqueAppointments = allAppointments.filter((appointment, index, self) => 
+                    index === self.findIndex(a => a.id === appointment.id)
+                );
+                
+                appointments = uniqueAppointments;
                 
                 displayAppointments();
                 resultsTitle.textContent = `Resultados da Busca (${appointments.length} encontrado${appointments.length !== 1 ? 's' : ''})`;
@@ -337,11 +355,13 @@
         function resetSearch() {
             const phoneInput = document.getElementById('search-phone');
             const emailInput = document.getElementById('search-email');
+            const whatsappInput = document.getElementById('search-whatsapp');
             const resetBtn = document.getElementById('reset-btn');
             const resultsTitle = document.getElementById('results-title');
             
             phoneInput.value = '';
             emailInput.value = '';
+            whatsappInput.value = '';
             resetBtn.style.display = 'none';
             resultsTitle.textContent = 'Seus Agendamentos';
             
@@ -360,7 +380,13 @@
                 
                 // Configurar formatação do telefone
                 const phoneInput = document.getElementById('search-phone');
+                const whatsappInput = document.getElementById('search-whatsapp');
+                
                 phoneInput.addEventListener('input', function(e) {
+                    e.target.value = formatPhone(e.target.value);
+                });
+                
+                whatsappInput.addEventListener('input', function(e) {
                     e.target.value = formatPhone(e.target.value);
                 });
                 
@@ -371,13 +397,16 @@
                 document.getElementById('search-email').addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') searchAppointments();
                 });
+                whatsappInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') searchAppointments();
+                });
                 
                 // Mostrar mensagem inicial
                 document.getElementById('appointments').innerHTML = `
                     <div class="bg-blue-50 p-8 rounded-lg text-center">
                         <i class="fas fa-search text-4xl text-blue-400 mb-4"></i>
                         <h3 class="text-lg font-semibold text-blue-800 mb-2">Buscar Agendamentos</h3>
-                        <p class="text-blue-600">Use o formulário acima para buscar seus agendamentos por telefone ou email.</p>
+                        <p class="text-blue-600">Use o formulário acima para buscar seus agendamentos por telefone, email ou WhatsApp.</p>
                     </div>
                 `;
             } else {
@@ -424,13 +453,13 @@
                     <i class="fas fa-search mr-2 text-primary-600"></i>
                     Buscar Agendamentos
                 </h2>
-                <p class="text-gray-600 mb-6">Informe seu telefone (WhatsApp) ou email para encontrar seus agendamentos</p>
+                <p class="text-gray-600 mb-6">Informe seu telefone, WhatsApp ou email para encontrar seus agendamentos</p>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div>
                         <label for="search-phone" class="block text-sm font-medium text-gray-700 mb-2">
                             <i class="fas fa-phone mr-1"></i>
-                            Telefone (WhatsApp)
+                            Telefone
                         </label>
                         <input 
                             type="tel" 
@@ -438,7 +467,21 @@
                             placeholder="(99) 99999-9999"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
-                        <p class="text-xs text-gray-500 mt-1">Digite o mesmo número usado no agendamento</p>
+                        <p class="text-xs text-gray-500 mt-1">Telefone usado no agendamento</p>
+                    </div>
+                    
+                    <div>
+                        <label for="search-whatsapp" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fab fa-whatsapp mr-1"></i>
+                            WhatsApp
+                        </label>
+                        <input 
+                            type="tel" 
+                            id="search-whatsapp" 
+                            placeholder="(99) 99999-9999"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        >
+                        <p class="text-xs text-gray-500 mt-1">WhatsApp usado no agendamento</p>
                     </div>
                     
                     <div>
@@ -452,14 +495,14 @@
                             placeholder="seu@email.com"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
-                        <p class="text-xs text-gray-500 mt-1">Digite o email usado no agendamento</p>
+                        <p class="text-xs text-gray-500 mt-1">Email usado no agendamento</p>
                     </div>
                 </div>
                 
                 <div class="bg-blue-50 p-3 rounded-lg mb-4">
                     <p class="text-sm text-blue-800">
                         <i class="fas fa-info-circle mr-2"></i>
-                        <strong>Como buscar:</strong> Você pode usar apenas o telefone (WhatsApp), apenas o email, ou ambos para encontrar seus agendamentos.
+                        <strong>Como buscar:</strong> Você pode usar qualquer um dos campos (telefone, WhatsApp ou email) para encontrar seus agendamentos.
                     </p>
                 </div>
                 

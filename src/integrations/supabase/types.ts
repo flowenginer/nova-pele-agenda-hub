@@ -249,6 +249,54 @@ export type Database = {
         }
         Relationships: []
       }
+      estoque: {
+        Row: {
+          categoria: string | null
+          created_at: string
+          data_compra: string | null
+          data_validade: string | null
+          fornecedor: string | null
+          id: string
+          nome_produto: string
+          observacoes: string | null
+          quantidade_atual: number
+          quantidade_minima: number
+          status: string
+          updated_at: string
+          valor_unitario: number
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string
+          data_compra?: string | null
+          data_validade?: string | null
+          fornecedor?: string | null
+          id?: string
+          nome_produto: string
+          observacoes?: string | null
+          quantidade_atual?: number
+          quantidade_minima?: number
+          status?: string
+          updated_at?: string
+          valor_unitario?: number
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string
+          data_compra?: string | null
+          data_validade?: string | null
+          fornecedor?: string | null
+          id?: string
+          nome_produto?: string
+          observacoes?: string | null
+          quantidade_atual?: number
+          quantidade_minima?: number
+          status?: string
+          updated_at?: string
+          valor_unitario?: number
+        }
+        Relationships: []
+      }
       iniciou_contato: {
         Row: {
           created_at: string | null
