@@ -1,0 +1,11 @@
+RewriteEngine On
+
+# Serve static HTML files directly
+RewriteRule ^index\.html$ index.html [L]
+RewriteRule ^agendamento\.html$ agendamento.html [L]
+RewriteRule ^consultar\.html$ consultar.html [L]
+
+# For everything else, let React handle it
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]

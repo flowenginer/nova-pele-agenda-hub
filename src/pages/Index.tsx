@@ -8,6 +8,7 @@ import { AppointmentsKanban } from '@/components/AppointmentsKanban';
 import { ClientsManagement } from '@/components/ClientsManagement';
 import { ProfessionalsManagement } from '@/components/ProfessionalsManagement';
 import { Revenue } from '@/components/Revenue';
+import { FinancialManagement } from '@/components/FinancialManagement';
 import { Communication } from '@/components/Communication';
 import { Settings } from '@/components/Settings';
 import { Button } from '@/components/ui/button';
@@ -228,6 +229,8 @@ const Index = () => {
             metrics={crmData.dashboardMetrics}
           />
         );
+      case 'financial':
+        return <FinancialManagement />;
       case 'communication':
         return <Communication clients={crmData.clients.map(client => ({
           id: client.id,

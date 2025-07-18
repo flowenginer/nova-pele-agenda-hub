@@ -10,7 +10,8 @@ import {
   MessageCircle, 
   Settings,
   TrendingUp,
-  ExternalLink
+  ExternalLink,
+  DollarSign
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -25,6 +26,7 @@ const menuItems = [
   { id: 'clients', label: 'Clientes', icon: Users },
   { id: 'professionals', label: 'Profissionais', icon: UserCog },
   { id: 'revenue', label: 'Receita', icon: TrendingUp },
+  { id: 'financial', label: 'Financeiro', icon: DollarSign },
   { id: 'communication', label: 'Comunicação', icon: MessageCircle },
   {
     id: 'public-links',

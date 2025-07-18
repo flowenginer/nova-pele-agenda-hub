@@ -20,7 +20,8 @@ import {
   Trash2, 
   Save, 
   X,
-  Eye
+  Eye,
+  ArrowLeft
 } from 'lucide-react';
 
 interface MedicalRecord {

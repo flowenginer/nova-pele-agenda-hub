@@ -22,7 +22,9 @@ import {
   CreditCard,
   Receipt,
   PieChart,
-  BarChart3
+  BarChart3,
+  Calculator,
+  FileText
 } from 'lucide-react';
 
 interface Expense {
