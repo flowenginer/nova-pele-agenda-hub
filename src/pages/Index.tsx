@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabaseCRM } from '@/hooks/useSupabaseCRM';
-import { LoginForm } from '@/components/Auth/LoginForm';
 import { Sidebar } from '@/components/Sidebar';
 import { Dashboard } from '@/components/Dashboard';
 import { AppointmentsKanban } from '@/components/AppointmentsKanban';
@@ -16,9 +16,17 @@ import { LogOut, Loader2 } from 'lucide-react';
 import { PublicLinks } from '@/components/PublicLinks';
 
 const Index = () => {
+  const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
   const crmData = useSupabaseCRM();
   const [activeSection, setActiveSection] = useState('dashboard');
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
 
   // Show loading while checking authentication
   if (authLoading) {
@@ -32,9 +40,9 @@ const Index = () => {
     );
   }
 
-  // Show login form if not authenticated
+  // Don't render if not authenticated
   if (!user) {
-    return <LoginForm />;
+    return null;
   }
 
   const handleSignOut = async () => {

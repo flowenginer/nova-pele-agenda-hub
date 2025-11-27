@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import PublicScheduling from "./pages/PublicScheduling";
 import PublicConsult from "./pages/PublicConsult";
@@ -31,7 +32,8 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Navigate to="/app" replace />} />
               <Route path="/app" element={<Index />} />
-              <Route path="/login" element={<Index />} />
+              <Route path="/login" element={<Auth />} />
+              <Route path="/auth" element={<Auth />} />
               <Route path="/agendamento" element={<PublicScheduling />} />
               <Route path="/consultar" element={<PublicConsult />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

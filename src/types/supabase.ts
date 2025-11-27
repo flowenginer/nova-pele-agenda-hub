@@ -1,80 +1,72 @@
 
 export interface DatabaseClient {
   id: string;
-  nome: string;
-  telefone: string;
-  whatsapp?: string;
+  name: string;
+  phone?: string;
   email?: string;
-  data_nascimento?: string;
-  endereco?: string;
-  status: 'lead' | 'cliente' | 'inativo';
-  observacoes?: string;
+  cpf?: string;
+  birth_date?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  notes?: string;
+  tags?: string[];
+  status: string;
   created_at: string;
   updated_at: string;
 }
 
 export interface DatabaseProfessional {
   id: number;
-  nome: string;
-  especialidade?: string;
-  photo_url?: string;
+  name: string;
+  specialization?: string;
   email?: string;
-  telefone?: string;
-  especialidades?: string[];
-  horario_inicio?: string;
-  horario_fim?: string;
-  dias_trabalho?: number[];
-  ativo?: boolean;
-  created_at?: string;
-  updated_at?: string;
+  phone?: string;
+  status: string;
+  color?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface DatabaseService {
   id: number;
-  nome: string;
-  descricao?: string;
-  duracao_minutos?: number;
-  preco?: number;
-  categoria?: string;
-  ativo?: boolean;
-  profissionais_ids?: string[];
-  created_at?: string;
-  updated_at?: string;
+  name: string;
+  description?: string;
+  duration?: number;
+  price?: number;
+  color?: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface DatabaseAppointment {
   id: number;
-  id_uuid?: string;
+  client_id?: string;
+  client_name: string;
+  client_email?: string;
+  client_phone?: string;
+  professional_id?: number;
+  professional_name?: string;
+  service_id?: number;
+  service_name: string;
+  date: string;
+  time: string;
+  duration: number;
   status: string;
-  cliente_nome: string;
-  cliente_telefone: string;
-  email?: string;
-  servico_id: number;
-  profissional_id: number;
-  data_agendamento: string;
-  hora_agendamento: string;
-  valor?: number;
-  observacoes?: string;
-  cliente_id?: string;
+  notes?: string;
+  price?: number;
+  payment_status?: string;
+  payment_method?: string;
   created_at: string;
-  updated_at?: string;
+  updated_at: string;
 }
 
 export interface SystemSettings {
-  id: string;
-  nome_clinica: string;
-  logo_url?: string;
-  cor_primaria: string;
-  horario_inicio: string;
-  horario_fim: string;
-  dias_funcionamento: number[];
-  duracao_padrao_agendamento: number;
-  notificacoes_ativadas: boolean;
-  integracao_whatsapp: boolean;
-  titulo_pagina: string;
-  subtitulo_pagina: string;
-  mensagem_boas_vindas: string;
-  mensagem_confirmacao: string;
+  id: number;
+  key: string;
+  value: any;
   created_at: string;
   updated_at: string;
 }

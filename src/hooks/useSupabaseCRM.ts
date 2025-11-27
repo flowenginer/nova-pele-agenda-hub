@@ -5,15 +5,13 @@ import type { DatabaseClient, DatabaseProfessional, DatabaseService, DatabaseApp
 
 interface DatabaseInicioContato {
   id: string;
-  nome: string;
-  telefone: string;
-  whatsapp?: string;
+  name: string;
+  phone: string;
   email?: string;
-  mensagem?: string;
+  message?: string;
   status: 'pendente' | 'convertido';
-  data_contato: string;
+  source?: string;
   created_at: string;
-  updated_at: string;
 }
 
 export const useSupabaseCRM = () => {
@@ -31,21 +29,20 @@ export const useSupabaseCRM = () => {
     try {
       console.log('Verificando necessidade de sincronização de clientes...');
       const clientsToCreate = [];
-      const existingPhones = new Set(existingClients.map(c => c.telefone));
+      const existingPhones = new Set(existingClients.map(c => c.phone));
       
       for (const appointment of appointmentsData) {
-        if (appointment.cliente_nome && appointment.cliente_telefone) {
+        if (appointment.client_name && appointment.client_phone) {
           // Verificar se cliente já existe na lista local ou no banco
-          if (!existingPhones.has(appointment.cliente_telefone)) {
+          if (!existingPhones.has(appointment.client_phone)) {
             clientsToCreate.push({
-              nome: appointment.cliente_nome,
-              telefone: appointment.cliente_telefone,
-              whatsapp: appointment.cliente_telefone,
-              email: appointment.email || null,
-              status: 'cliente'
+              name: appointment.client_name,
+              phone: appointment.client_phone,
+              email: appointment.client_email || null,
+              status: 'ativo'
             });
             // Adicionar à lista local para evitar duplicatas na mesma sincronização
-            existingPhones.add(appointment.cliente_telefone);
+            existingPhones.add(appointment.client_phone);
           }
         }
       }
@@ -53,7 +50,7 @@ export const useSupabaseCRM = () => {
       // Criar clientes em lote se houver algum novo
       if (clientsToCreate.length > 0) {
         const { data: newClients, error } = await supabase
-          .from('clientes')
+          .from('clients')
           .insert(clientsToCreate)
           .select();
 
@@ -79,7 +76,7 @@ export const useSupabaseCRM = () => {
 
       // Fetch clients first
       const { data: clientsData, error: clientsError } = await supabase
-        .from('clientes')
+        .from('clients')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -89,34 +86,34 @@ export const useSupabaseCRM = () => {
 
       // Fetch professionals
       const { data: professionalsData, error: professionalsError } = await supabase
-        .from('profissionais')
+        .from('professionals')
         .select('*')
-        .order('nome');
+        .order('name');
 
       if (professionalsError) throw professionalsError;
       setProfessionals((professionalsData || []) as DatabaseProfessional[]);
 
       // Fetch services
       const { data: servicesData, error: servicesError } = await supabase
-        .from('servicos')
+        .from('services')
         .select('*')
-        .order('nome');
+        .order('name');
 
       if (servicesError) throw servicesError;
       setServices((servicesData || []) as DatabaseService[]);
 
       // Fetch appointments
       const { data: appointmentsData, error: appointmentsError } = await supabase
-        .from('agendamentos')
+        .from('appointments')
         .select('*')
-        .order('data_agendamento', { ascending: false });
+        .order('date', { ascending: false });
 
       if (appointmentsError) throw appointmentsError;
       setAppointments((appointmentsData || []) as DatabaseAppointment[]);
 
       // Fetch inicio contatos
       const { data: inicioContatosData, error: inicioContatosError } = await supabase
-        .from('iniciou_contato')
+        .from('inicio_contatos')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -135,7 +132,7 @@ export const useSupabaseCRM = () => {
 
       // Fetch system settings
       const { data: settingsData, error: settingsError } = await supabase
-        .from('configuracoes_sistema')
+        .from('settings')
         .select('*')
         .limit(1)
         .maybeSingle();
